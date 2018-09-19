@@ -1,22 +1,19 @@
 import express from "express";
 
+// prettier-ignore
+type httpVerb = "GET" | "HEAD" | "POST" | "PUT" | "DELETE" | "CONNECT" | "OPTIONS" | "TRACE" | "PATCH";
+// prettier-ignore
+type statusCode = 100 | 101 | 102 | 103 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 226 | 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | 400 | 401 | 402 | 403 | 404 | 405 | 406 | 407 | 408 | 409 | 410 | 411 | 412 | 413 | 414 | 415 | 416 | 417 | 418 | 421 | 422 | 423 | 424 | 426 | 428 | 429 | 431 | 451 | 500 | 501 | 502 | 503 | 504 | 505 | 506 | 507 | 508 | 510 | 511;
+
 export interface Contract<T = any, S = any> {
     request: T;
     response: S;
-}
-
-export interface Error {
-    statusCode: number;
-    message: string;
 }
 
 interface EndpointConfig {
     verb: httpVerb;
     expectedStatusCode: statusCode[];
 }
-
-type httpVerb = "GET" | "HEAD" | "POST" | "PUT" | "DELETE" | "CONNECT" | "OPTIONS" | "TRACE" | "PATCH";
-type statusCode = 100 | 101 | 102 | 103 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 226 | 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | 400 | 401 | 402 | 403 | 404 | 405 | 406 | 407 | 408 | 409 | 410 | 411 | 412 | 413 | 414 | 415 | 416 | 417 | 418 | 421 | 422 | 423 | 424 | 426 | 428 | 429 | 431 | 451 | 500 | 501 | 502 | 503 | 504 | 505 | 506 | 507 | 508 | 510 | 511;
 
 export class Endpoint<C extends Contract> {
     public readonly config: EndpointConfig;
@@ -26,7 +23,7 @@ export class Endpoint<C extends Contract> {
         const defaultConfig: EndpointConfig = {
             verb: "POST",
             expectedStatusCode: [200],
-        }
+        };
         this.config = Object.assign(defaultConfig, config);
         this.path = path;
     }
@@ -41,7 +38,7 @@ export class Endpoint<C extends Contract> {
         handler: (
             requestData: C["request"],
             req: express.Request,
-            res: express.Response
+            res: express.Response,
         ) => Promise<C["response"]>,
         errorHandler?: (err: any) => any,
     ): void {
@@ -55,9 +52,9 @@ export class Endpoint<C extends Contract> {
 
             const rawRequestData = await new Promise<string>((resolve) => {
                 let data = "";
-                req.setEncoding('utf8');
-                req.on("data", (chunk) => data += chunk);
-                req.on('end', () => resolve(data));
+                req.setEncoding("utf8");
+                req.on("data", (chunk) => (data += chunk));
+                req.on("end", () => resolve(data));
             });
 
             let requestData = null;
@@ -65,7 +62,7 @@ export class Endpoint<C extends Contract> {
                 requestData = JSON.parse(rawRequestData);
             } catch (e) {
                 res.sendStatus(400);
-                res.send("Could not parse incoming request data.")
+                res.send("Could not parse incoming request data.");
                 return;
             }
 
