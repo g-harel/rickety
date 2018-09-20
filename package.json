@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc",
+    "example": "npx ts-node example",
     "clean": "trash '**/*.js' '**/*.d.ts' '!node_modules/**/*'",
     "format": "prettier --list-different --write --ignore-path .gitignore '**/*.{js,ts}'"
   },
