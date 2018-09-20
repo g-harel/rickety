@@ -14,9 +14,14 @@ export type UserResponse = {
     };
 };
 
-export const userByID = H<RequestByID, UserResponse>("/api/v1/userByID");
+export const userByID = H<RequestByID, UserResponse>({
+    port: 3000,
+    path: "/api/v1/userByID",
+});
 export const userByName = H<RequestByName, UserResponse>({
     method: "POST",
+    host: "localhost",
+    port: 3000,
     path: "/api/v1/userByName",
     expect: 200,
 });

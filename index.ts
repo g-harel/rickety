@@ -1,4 +1,3 @@
-import "isomorphic-fetch";
 import express from "express";
 
 // prettier-ignore
@@ -9,6 +8,7 @@ export type Status = 100 | 101 | 102 | 103 | 200 | 201 | 202 | 203 | 204 | 205 |
 export interface Config {
     method?: Method;
     host?: string;
+    port?: number;
     path: string;
     expect?: Status | Status[];
 }
@@ -16,6 +16,7 @@ export interface Config {
 interface StrictConfig {
     method: Method;
     host: string;
+    port: number;
     path: string;
     expect: Status[];
 }
@@ -51,28 +52,61 @@ const respond = (
         req.on("end", () => resolve(data));
     });
 
-    const requestData = JSON.parse(rawRequestData);
-    const responseData = await handler(requestData, req, res);
-    const rawResponseData = JSON.stringify(responseData);
+    let rawResponseData: string = "";
+    try {
+        const requestData = JSON.parse(rawRequestData);
+        const responseData = await handler(requestData, req, res);
+        rawResponseData = JSON.stringify(responseData);
+    } catch (e) {
+        return next(e);
+    }
 
     if (!res.headersSent) {
         res.status(200);
         res.send(rawResponseData);
     }
-    next();
+    return next();
 };
 
 const request = async (config: StrictConfig, data: any) => {
-    const response = await fetch(config.host + config.path, {
-        method: config.method,
-        body: JSON.stringify(data),
-    });
+    if (typeof window === "undefined") {
+        const sneakyRequire = eval("require");
+        const http = sneakyRequire("http");
 
-    if (config.expect.indexOf(response.status as any) < 0) {
-        throw new Error("Unexpected status");
+        return new Promise((resolve, reject) => {
+            const req = http.request(config, (res: any) => {
+                let data = "";
+                res.on("data", (chunk: string) => (data += chunk));
+                res.on("end", () => {
+                    if (config.expect.indexOf(res.statusCode as any) < 0) {
+                        reject(Error("Unexpected status"));
+                    }
+                    resolve(JSON.parse(data));
+                });
+            });
+
+            req.write(JSON.stringify(data));
+            req.end();
+        });
     }
 
-    return response.json();
+    return new Promise((resolve, reject) => {
+        const url = `${config.host}:${config.port}${config.path}`;
+        const http = new XMLHttpRequest();
+
+        http.open(config.method, url, true);
+        http.onreadystatechange = () => {
+            if (http.readyState !== 4) {
+                return;
+            }
+            if (config.expect.indexOf(http.status as any) < 0) {
+                reject(Error("Unexpected status"));
+            }
+            resolve(JSON.parse(http.responseText));
+        };
+
+        http.send(JSON.stringify(data));
+    });
 };
 
 const hammond = <RQ, RS>(pathOrConfig: Config | string): Endpoint<RQ, RS> => {
@@ -83,6 +117,7 @@ const hammond = <RQ, RS>(pathOrConfig: Config | string): Endpoint<RQ, RS> => {
     const config: StrictConfig = {
         path: pathOrConfig.path,
         host: pathOrConfig.host || "",
+        port: pathOrConfig.port || 80,
         method: pathOrConfig.method || "POST",
         expect: [].concat(pathOrConfig.expect || (200 as any)) as Status[],
     };

@@ -2,7 +2,7 @@ import express from "express";
 
 import {userByID, userByName, UserResponse} from "./common";
 
-const app = express();
+export const app = express();
 
 const readUser = (): UserResponse => ({
     id: 1234,
@@ -12,10 +12,6 @@ const readUser = (): UserResponse => ({
         username: null,
     },
 });
-
-app.use((_: any, __: any, res: any, ___: any) => {
-    res.sendStatus(500);
-})
 
 app.use(
     userByID((userID) => {
@@ -35,5 +31,3 @@ app.use(
         return user;
     }),
 );
-
-app.listen(3000);
