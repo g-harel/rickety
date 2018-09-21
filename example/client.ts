@@ -1,4 +1,4 @@
-import {userByID, userByName} from "./common";
+import {userByID, userByName} from "./shared";
 
 export const run = async () => {
     // Calling the endpoint with the correct request type will
