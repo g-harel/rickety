@@ -1,8 +1,10 @@
 {
   "name": "hts",
-  "version": "0.0.0",
-  "main": "index.js",
+  "version": "1.0.0",
+  "description": "minimal typescript rpc framework",
+  "author": "g-harel",
   "license": "MIT",
+  "main": "index.js",
   "scripts": {
     "build": "tsc",
     "clean": "trash '**/*.js' '**/*.d.ts' '!node_modules/**/*'",
@@ -12,11 +14,24 @@
     "@types/express": "^4.16.0"
   },
   "devDependencies": {
-    "express": "^4.16.3",
     "prettier": "^1.14.2",
     "trash-cli": "^1.4.0",
     "typescript": "^3.0.3"
   },
+  "homepage": "https://github.com/g-harel/hts#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/g-harel/hts"
+  },
+  "bugs": {
+    "url": "https://github.com/g-harel/hts/issues"
+  },
+  "keywords": [
+    "H",
+    "typescript",
+    "ts",
+    "rpc"
+  ],
   "prettier": {
     "tabWidth": 4,
     "printWidth": 85,
