@@ -1,4 +1,4 @@
-import {H} from "..";
+import {def} from "..";
 
 // Request types can be defined per endpoint, or can be
 // more generic types to be re-used by multiple endpoints.
@@ -22,11 +22,11 @@ export type UserResponse = {
 // Endpoint definitions combine their configuration with the
 // request and response data types. The endpoints do not
 // necessarily need to represent routes handled by this package.
-export const userByID = H<RequestByID, UserResponse>({
+export const userByID = def<RequestByID, UserResponse>({
     port: 3000,
     path: "/api/v1/userByID",
 });
-export const userByName = H<RequestByName, UserResponse>({
+export const userByName = def<RequestByName, UserResponse>({
     method: "POST",
     host: "localhost",
     port: 3000,

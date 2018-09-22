@@ -1,5 +1,5 @@
 {
-  "name": "hts",
+  "name": "rickety",
   "version": "1.0.0",
   "description": "minimal typescript rpc framework",
   "author": "g-harel",
@@ -18,16 +18,15 @@
     "trash-cli": "^1.4.0",
     "typescript": "^3.0.3"
   },
-  "homepage": "https://github.com/g-harel/hts#readme",
+  "homepage": "https://github.com/g-harel/rickety#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/g-harel/hts"
+    "url": "git+https://github.com/g-harel/rickety"
   },
   "bugs": {
-    "url": "https://github.com/g-harel/hts/issues"
+    "url": "https://github.com/g-harel/rickety/issues"
   },
   "keywords": [
-    "H",
     "typescript",
     "ts",
     "rpc"

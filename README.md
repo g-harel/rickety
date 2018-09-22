@@ -1,25 +1,29 @@
-# [H]ts
+# rickety
 
 > minimal typescript rpc framework
 
-* No runtime dependencies
-* Highly configurable endpoint definitions
 * Simple package interface
+* Highly configurable endpoint definitions
+* No runtime dependencies
 * Supports endpoint invocation from Node
 
 ## Install
 
 ```shell
-$ npm install hts
+$ npm install rickety
 ```
 
 ## Usage
+
+``` typescript
+import {def} from "rickety";
+```
 
 ```typescript
 type Request = {...}
 type Response = {...}
 
-const endpoint = H<Request, Response>("/api/v1/...");
+const endpoint = def<Request, Response>("/api/v1/...");
 ```
 
 ```typescript

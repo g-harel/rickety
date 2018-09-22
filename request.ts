@@ -18,7 +18,8 @@ export const request: Sender = async (config, data) => {
 
 const browserSender: Sender = async (config, data) => {
     return new Promise((resolve, reject) => {
-        const url = `${config.host}:${config.port}${config.path}`;
+        const port = config.port === 80 ? "" : `:${config.port}`;
+        const url = `${config.host}${port}${config.path}`;
         const http = new XMLHttpRequest();
 
         http.open(config.method, url, true);

@@ -69,7 +69,7 @@ export interface Endpoint<RQ, RS> {
 // The H function creates an Endpoint interface implementing
 // function from an input Config or a simple path. Note that
 // there is absolutely no runtime type checking.
-export const H = <RQ, RS>(pathOrConfig: Config | string): Endpoint<RQ, RS> => {
+export const def = <RQ, RS>(pathOrConfig: Config | string): Endpoint<RQ, RS> => {
     // After this block, the input argument can only have the
     // type of a Config.
     if (typeof pathOrConfig === "string") {
