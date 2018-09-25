@@ -31,7 +31,7 @@ app.use(
 // use of the raw express request and response objects.
 app.use(
     userByName(async (data, _, res) => {
-        res.setHeader("User-Agent", "Example");
+        res.setHeader("User-Agent", "Example/0.0");
 
         const name = data.name.replace(/\s/g, "").toLowerCase();
 

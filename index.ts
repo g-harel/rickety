@@ -38,6 +38,11 @@ export interface Config {
     expect?: Status | Status[];
 }
 
+// Headers can be passed when invoking the endpoint.
+export interface Headers {
+    [name: string]: string;
+}
+
 // A stricter version of the Config which demands defined values.
 export interface StrictConfig {
     method: Method;
@@ -63,7 +68,7 @@ export interface RequestHandler<RQ, RS> {
 export interface Endpoint<RQ, RS> {
     readonly config: StrictConfig;
     (handler: RequestHandler<RQ, RS>): express.RequestHandler;
-    (data: RQ): Promise<RS>;
+    (data: RQ, ...headers: Headers[]): Promise<RS>;
 }
 
 // The H function creates an Endpoint interface implementing
@@ -87,13 +92,13 @@ export const def = <RQ, RS>(pathOrConfig: Config | string): Endpoint<RQ, RS> => 
 
     // Endpoint function is not directly returned so that the
     // config property can be attached to it.
-    const func = (dataOrHandler: any): any => {
+    const func = (dataOrHandler: any, ...headers: any[]): any => {
         // The function type is overloaded and can accept both
         // request handlers or request data.
         if (typeof dataOrHandler === "function") {
             return respond(config, dataOrHandler);
         }
-        return request(config, dataOrHandler);
+        return request(config, dataOrHandler, headers);
     };
 
     // Config is attached to the endpoint function.
