@@ -23,13 +23,14 @@ export type UserResponse = {
 // request and response data types. The endpoints do not
 // necessarily need to represent routes handled by this package.
 export const userByID = new rickety.Endpoint<RequestByID, UserResponse>({
-    port: 3000,
+    // Defining the base is not required when querying from a
+    // browser and the request is on the same domain.
+    base: "http://localhost:3000",
     path: "/api/v1/userByID",
 });
 export const userByName = new rickety.Endpoint<RequestByName, UserResponse>({
     method: "POST",
-    host: "localhost",
-    port: 3000,
+    base: "http://localhost:3000",
     path: "/api/v1/userByName",
     expect: 200,
 });
