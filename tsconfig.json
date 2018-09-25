@@ -1,10 +1,18 @@
 {
+  "exclude": [
+    "example",
+    "node_modules"
+  ],
   "compilerOptions": {
-    "target": "es2015",
+    "target": "es5",
     "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
     "lib": [
-      "es2015", "dom"
+      "es2018", "dom"
     ],
+    "sourceMap": true,
+    "removeComments": true,
     "declaration": true,
     "strict": true,
     "noImplicitAny": true,
@@ -16,7 +24,6 @@
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true
+    "allowSyntheticDefaultImports": true
   }
 }

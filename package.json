@@ -5,15 +5,17 @@
   "author": "g-harel",
   "license": "MIT",
   "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "clean": "trash '**/*.js' '**/*.d.ts' '!node_modules/**/*'",
+    "build": "npm run clean && tsc",
+    "clean": "trash '**/*.js' '**/*.js.map' '**/*.d.ts' '!node_modules/**/*'",
     "format": "prettier --list-different --write --ignore-path .gitignore '**/*.{js,ts}'"
   },
   "dependencies": {
     "@types/express": "^4.16.0"
   },
   "devDependencies": {
+    "express": "^4.16.3",
     "prettier": "^1.14.2",
     "trash-cli": "^1.4.0",
     "typescript": "^3.0.3"
