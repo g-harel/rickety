@@ -3,9 +3,9 @@
 > minimal typescript rpc framework
 
 * Simple package interface
-* Highly configurable endpoint definitions
+* Configurable endpoint definitions
 * No runtime dependencies
-* Supports endpoint invocation from Node
+* Supports endpoint invocation from NodeJS
 
 ## Install
 
@@ -16,26 +16,26 @@ $ npm install rickety
 ## Usage
 
 ``` typescript
-import {def} from "rickety";
+import {Endpoint} from "rickety";
 ```
 
 ```typescript
 type Request = {...}
 type Response = {...}
 
-const endpoint = def<Request, Response>("/api/v1/...");
+const endpoint = new Endpoint<Request, Response>("/api/...");
 ```
 
 ```typescript
 app.use(
-    endpoint(async (request) => {
+    endpoint.handler(async (request) => {
         return response;
     });
 );
 ```
 
 ```typescript
-const response = await endpoint(request);
+const response = await endpoint.call(request);
 ```
 
 ## License
