@@ -62,45 +62,32 @@ export interface RequestHandler<RQ, RS> {
 }
 
 // An endpoint contains its configuration as well as the types
-// of the request and response values. It is called as a function
-// to either invoke the handler over the network or configure
-// an express application with a request handler.
-export interface Endpoint<RQ, RS> {
-    readonly config: StrictConfig;
-    (handler: RequestHandler<RQ, RS>): express.RequestHandler;
-    (data: RQ, ...headers: Headers[]): Promise<RS>;
-}
+// of the request and response values.
+export class Endpoint<RQ, RS> {
+    public readonly config: StrictConfig;
 
-// The H function creates an Endpoint interface implementing
-// function from an input Config or a simple path. Note that
-// there is absolutely no runtime type checking.
-export const def = <RQ, RS>(pathOrConfig: Config | string): Endpoint<RQ, RS> => {
-    // After this block, the input argument can only have the
-    // type of a Config.
-    if (typeof pathOrConfig === "string") {
-        pathOrConfig = {path: pathOrConfig};
+    constructor(pathOrConfig: Config | string) {
+        // After this block, the input argument can only have the
+        // type of a Config.
+        if (typeof pathOrConfig === "string") {
+            pathOrConfig = {path: pathOrConfig};
+        }
+
+        this.config = {
+            path: pathOrConfig.path,
+            host: pathOrConfig.host || "",
+            port: pathOrConfig.port || 80,
+            method: pathOrConfig.method || "POST",
+            // The expected status is normalized into an array.
+            expect: [].concat(pathOrConfig.expect || (200 as any)) as Status[],
+        };
     }
 
-    const config: StrictConfig = {
-        path: pathOrConfig.path,
-        host: pathOrConfig.host || "",
-        port: pathOrConfig.port || 80,
-        method: pathOrConfig.method || "POST",
-        // The expected status is normalized into an array.
-        expect: [].concat(pathOrConfig.expect || (200 as any)) as Status[],
-    };
+    public async call(data: RQ, ...headers: Headers[]): Promise<RS> {
+        return request(this.config, data, headers);
+    }
 
-    // Endpoint function is not directly returned so that the
-    // config property can be attached to it.
-    const func = (dataOrHandler: any, ...headers: any[]): any => {
-        // The function type is overloaded and can accept both
-        // request handlers or request data.
-        if (typeof dataOrHandler === "function") {
-            return respond(config, dataOrHandler);
-        }
-        return request(config, dataOrHandler, headers);
-    };
-
-    // Config is attached to the endpoint function.
-    return Object.assign(func, {config});
-};
+    public handler(handler: RequestHandler<RQ, RS>): express.RequestHandler {
+        return respond(this.config, handler);
+    }
+}

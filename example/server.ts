@@ -19,7 +19,7 @@ const readUser = (): UserResponse => ({
 // This is where the handler implementation is associated
 // with it's endpoint.
 app.use(
-    userByID((userID) => {
+    userByID.handler((userID) => {
         const user = readUser();
         user.id = userID;
 
@@ -30,7 +30,7 @@ app.use(
 // The handler can also be an asynchronous function and make
 // use of the raw express request and response objects.
 app.use(
-    userByName(async (data, _, res) => {
+    userByName.handler(async (data, _, res) => {
         res.setHeader("User-Agent", "Example/0.0");
 
         const name = data.name.replace(/\s/g, "").toLowerCase();

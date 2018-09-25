@@ -3,7 +3,7 @@ import {userByID, userByName} from "./shared";
 export const run = async () => {
     // Calling the endpoint with the correct request type will
     // return a promise for the response type.
-    const user1 = await userByID(1234);
+    const user1 = await userByID.call(1234);
     console.log(">", user1.name);
 
     // It is important to remember that there is no runtime type
@@ -12,7 +12,7 @@ export const run = async () => {
     // expected status code in the endpoint config. This example
     // also demonstrates the ability to include headers with the
     // request.
-    const user2 = await userByName(
+    const user2 = await userByName.call(
         {name: "John Doe"},
         // HTTP Headers.
         {"User-Agent": "Example/0.0"},
