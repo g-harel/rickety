@@ -1,9 +1,5 @@
 import express from "express";
-
-export {Sender, SenderRequest, SenderResponse} from "./request";
-
-import {browserSender, Sender, serverSender} from "./request";
-import {respond} from "./respond";
+import _http from "http";
 
 // prettier-ignore
 export type Method = "GET" | "HEAD" | "POST" | "PUT" | "DELETE" | "CONNECT" | "OPTIONS" | "TRACE" | "PATCH";
@@ -50,6 +46,22 @@ export interface StrictConfig {
     expect: Status[];
 }
 
+export interface SenderResponse {
+    status: Status;
+    body: string;
+}
+
+export interface SenderRequest {
+    method: string;
+    url: string;
+    headers: Headers;
+    body: string;
+}
+
+export interface Sender {
+    (request: SenderRequest): Promise<SenderResponse>;
+}
+
 // Request handlers contain the server code that transforms
 // typed requests into typed responses. Both express' request
 // and response objects are passed to the function to make it
@@ -58,6 +70,64 @@ export interface StrictConfig {
 export interface RequestHandler<RQ, RS> {
     (data: RQ, req: express.Request, res: express.Response): Promise<RS> | RS;
 }
+
+const browserSender: Sender = async (request) => {
+    return new Promise<SenderResponse>((resolve) => {
+        const http = new XMLHttpRequest();
+
+        http.open(request.method, request.url, true);
+
+        Object.keys(request.headers).forEach((name) => {
+            http.setRequestHeader(name, request.headers[name]);
+        });
+
+        http.onreadystatechange = () => {
+            if (http.readyState === 4) {
+                resolve({
+                    status: http.status,
+                    body: http.responseText,
+                } as any);
+            }
+        };
+
+        http.send(request.body);
+    });
+};
+
+const serverSender: Sender = async (request) => {
+    // To avoid having code bundlers sniff out that the http
+    // package is being used, the use of the require function
+    // is hidden using an eval statement.
+    const sneakyRequire = eval("require");
+    const http = sneakyRequire("http") as typeof _http;
+
+    return new Promise<SenderResponse>((resolve, reject) => {
+        const req = http.request(
+            request.url,
+            {
+                method: request.method,
+                headers: request.headers,
+            },
+            (res) => {
+                let data = "";
+                res.on("data", (chunk: string) => (data += chunk));
+                res.on("end", () => {
+                    resolve({
+                        status: res.statusCode,
+                        body: data,
+                    } as any);
+                });
+            },
+        );
+
+        req.write(request.body, "utf8", (err?: Error | null) => {
+            req.end();
+            if (err !== undefined) {
+                reject(err);
+            }
+        });
+    });
+};
 
 // An endpoint contains its configuration as well as the types
 // of the request and response values.
@@ -109,7 +179,54 @@ export class Endpoint<RQ, RS> {
         return JSON.parse(res.body);
     }
 
+    // Handler generator returning an express request handler
+    // from a config and a request handling function.
     public handler(handler: RequestHandler<RQ, RS>): express.RequestHandler {
-        return respond(this.config, handler);
+        return async (req, res, next) => {
+            // Only requests with the correct path and method are handled.
+            if (req.path !== this.config.path) {
+                return next();
+            }
+            if (req.method !== this.config.method) {
+                return next();
+            }
+
+            // Handler is not invoked if a different handler
+            // has already answered the request. This situation
+            // is considered an error since the handler should
+            // have been used.
+            if (res.headersSent) {
+                return next(new Error("Response has already been sent."));
+            }
+
+            // Request body is streamed into a string to be parsed.
+            const rawRequestData = await new Promise<string>((resolve) => {
+                let data = "";
+                req.setEncoding("utf8");
+                req.on("data", (chunk) => (data += chunk));
+                req.on("end", () => resolve(data));
+            });
+
+            let rawResponseData: string = "";
+            try {
+                const requestData = JSON.parse(rawRequestData);
+                const responseData = await handler(requestData, req, res);
+                rawResponseData = JSON.stringify(responseData);
+            } catch (e) {
+                // Handler and serialization errors are forwarded
+                // to express to be handled gracefully.
+                return next(e);
+            }
+
+            // Although the handler is given access to the express
+            // response object, it should not send the data itself.
+            if (res.headersSent) {
+                return next(new Error("Response was sent by handler."));
+            }
+
+            res.status(200);
+            res.send(rawResponseData);
+            return next();
+        };
     }
 }
