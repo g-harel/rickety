@@ -1,3 +1,14 @@
+<!--
+
+TODO
+- config allowing data transfer through get params (URL encode) (sending nested object in query params is ??? but receiving should work)
+- make errors more helpful / clear
+- make sender not a global, but remain mockable for tests (can't use mocks if app code replaces sender)
+- design a complete testing story (ex. calling handlers without the network)
+- properly set content-type headers
+
+ -->
+
 # rickety [![NPM Version](https://img.shields.io/npm/v/rickety.svg)](https://www.npmjs.com/package/rickety) [![NPM Type Definitions](https://img.shields.io/npm/types/rickety.svg)](https://github.com/g-harel/rickety)
 
 > minimal typescript rpc framework

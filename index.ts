@@ -46,22 +46,6 @@ export interface StrictConfig {
     expect: Status[];
 }
 
-export interface SenderResponse {
-    status: Status;
-    body: string;
-}
-
-export interface SenderRequest {
-    method: string;
-    url: string;
-    headers: Headers;
-    body: string;
-}
-
-export interface Sender {
-    (request: SenderRequest): Promise<SenderResponse>;
-}
-
 // Request handlers contain the server code that transforms
 // typed requests into typed responses. Both express' request
 // and response objects are passed to the function to make it
@@ -71,71 +55,10 @@ export interface RequestHandler<RQ, RS> {
     (data: RQ, req: express.Request, res: express.Response): Promise<RS> | RS;
 }
 
-const browserSender: Sender = async (request) => {
-    return new Promise<SenderResponse>((resolve) => {
-        const http = new XMLHttpRequest();
-
-        http.open(request.method, request.url, true);
-
-        Object.keys(request.headers).forEach((name) => {
-            http.setRequestHeader(name, request.headers[name]);
-        });
-
-        http.onreadystatechange = () => {
-            if (http.readyState === 4) {
-                resolve({
-                    status: http.status,
-                    body: http.responseText,
-                } as any);
-            }
-        };
-
-        http.send(request.body);
-    });
-};
-
-const serverSender: Sender = async (request) => {
-    // To avoid having code bundlers sniff out that the http
-    // package is being used, the use of the require function
-    // is hidden using an eval statement.
-    const sneakyRequire = eval("require");
-    const http = sneakyRequire("http") as typeof _http;
-
-    return new Promise<SenderResponse>((resolve, reject) => {
-        const req = http.request(
-            request.url,
-            {
-                method: request.method,
-                headers: request.headers,
-            },
-            (res) => {
-                let data = "";
-                res.on("data", (chunk: string) => (data += chunk));
-                res.on("end", () => {
-                    resolve({
-                        status: res.statusCode,
-                        body: data,
-                    } as any);
-                });
-            },
-        );
-
-        req.write(request.body, "utf8", (err?: Error | null) => {
-            req.end();
-            if (err !== undefined) {
-                reject(err);
-            }
-        });
-    });
-};
-
 // An endpoint contains its configuration as well as the types
 // of the request and response values.
 export class Endpoint<RQ, RS> {
-    // Sender value is platform dependent. An implementation
-    // for both browser and node globals is included.
-    public static sender: Sender =
-        typeof window === "undefined" ? serverSender : browserSender;
+    public static sender: Sender;
 
     public readonly config: StrictConfig;
 
@@ -230,3 +153,81 @@ export class Endpoint<RQ, RS> {
         };
     }
 }
+
+export interface SenderResponse {
+    status: Status;
+    body: string;
+}
+
+export interface SenderRequest {
+    method: string;
+    url: string;
+    headers: Headers;
+    body: string;
+}
+
+export interface Sender {
+    (request: SenderRequest): Promise<SenderResponse>;
+}
+
+const browserSender: Sender = async (request) => {
+    return new Promise<SenderResponse>((resolve) => {
+        const http = new XMLHttpRequest();
+
+        http.open(request.method, request.url, true);
+
+        Object.keys(request.headers).forEach((name) => {
+            http.setRequestHeader(name, request.headers[name]);
+        });
+
+        http.onreadystatechange = () => {
+            if (http.readyState === 4) {
+                resolve({
+                    status: http.status,
+                    body: http.responseText,
+                } as any);
+            }
+        };
+
+        http.send(request.body);
+    });
+};
+
+const serverSender: Sender = async (request) => {
+    // To avoid having code bundlers sniff out that the http
+    // package is being used, the use of the require function
+    // is hidden using an eval statement.
+    const sneakyRequire = eval("require");
+    const http = sneakyRequire("http") as typeof _http;
+
+    return new Promise<SenderResponse>((resolve, reject) => {
+        const req = http.request(
+            request.url,
+            {
+                method: request.method,
+                headers: request.headers,
+            },
+            (res) => {
+                let data = "";
+                res.on("data", (chunk: string) => (data += chunk));
+                res.on("end", () => {
+                    resolve({
+                        status: res.statusCode,
+                        body: data,
+                    } as any);
+                });
+            },
+        );
+
+        req.write(request.body, "utf8", (err?: Error | null) => {
+            req.end();
+            if (err !== undefined) {
+                reject(err);
+            }
+        });
+    });
+};
+
+// Sender value is platform dependent. An implementation
+// for both browser and node globals is included.
+Endpoint.sender = typeof window === "undefined" ? serverSender : browserSender;

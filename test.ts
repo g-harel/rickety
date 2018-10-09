@@ -1,10 +1,14 @@
-import {Config, Endpoint} from ".";
+import {Config, Endpoint, SenderRequest} from ".";
 
 let sender: jest.Mock;
+let lastSent: SenderRequest;
 
 describe("Endpoint", () => {
     beforeEach(() => {
-        sender = jest.fn(() => ({status: 200, body: "{}"}));
+        sender = jest.fn((request) => {
+            lastSent = request;
+            return {status: 200, body: "{}"};
+        });
         Endpoint.sender = sender;
     });
 
@@ -26,6 +30,15 @@ describe("Endpoint", () => {
     });
 
     describe("call", () => {
+        it("should concatenate the base and the path to form the url", async () => {
+            const config: Config = {
+                base: "base123",
+                path: "/path123",
+            };
+            await new Endpoint(config).call({});
+            expect(lastSent.url).toBe(config.base + config.path);
+        });
+
         it("should pass along request data to sender", async () => {
             const path = "/path123";
             const request = {
@@ -33,26 +46,7 @@ describe("Endpoint", () => {
                 list: [0, "test", null],
             };
             await new Endpoint(path).call(request);
-            expect(sender).toHaveBeenCalledWith({
-                body: JSON.stringify(request),
-                headers: {},
-                method: "POST",
-                url: path,
-            });
-        });
-
-        it("should concatenate the base and the path to form the url", async () => {
-            const config: Config = {
-                base: "base123",
-                path: "/path123",
-            };
-            await new Endpoint(config).call({});
-            expect(sender).toHaveBeenCalledWith({
-                body: "{}",
-                headers: {},
-                method: "POST",
-                url: config.base + config.path,
-            });
+            expect(lastSent.body).toBe(JSON.stringify(request));
         });
 
         it("should use the configured http method", async () => {
@@ -61,12 +55,31 @@ describe("Endpoint", () => {
                 path: "/path123",
             };
             await new Endpoint(config).call({});
-            expect(sender).toHaveBeenCalledWith({
+            expect(lastSent.method).toBe(config.method);
+        });
+
+        it("should collapse headers together", async () => {
+            const headers: Array<Record<string, string>> = [
+                {testA: "test"},
+                {testB: "test"},
+            ];
+            await new Endpoint("/test").call({}, ...headers);
+            for (let headerSubset of headers) {
+                expect(lastSent.headers).toMatchObject(headerSubset);
+            }
+        });
+
+        it("should throw an error if the status code not expected", async () => {
+            const config: Config = {
+                path: "/path123",
+                expect: [301, 302],
+            };
+            sender.mockReturnValueOnce({
+                status: 400,
                 body: "{}",
-                headers: {},
-                method: config.method,
-                url: config.path,
             });
+            const endpoint = await new Endpoint(config);
+            expect(endpoint.call({})).rejects.toThrow(/status.*400/);
         });
     });
 });
