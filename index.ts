@@ -170,64 +170,15 @@ export interface Sender {
     (request: SenderRequest): Promise<SenderResponse>;
 }
 
-const browserSender: Sender = async (request) => {
-    return new Promise<SenderResponse>((resolve) => {
-        const http = new XMLHttpRequest();
-
-        http.open(request.method, request.url, true);
-
-        Object.keys(request.headers).forEach((name) => {
-            http.setRequestHeader(name, request.headers[name]);
-        });
-
-        http.onreadystatechange = () => {
-            if (http.readyState === 4) {
-                resolve({
-                    status: http.status,
-                    body: http.responseText,
-                } as any);
-            }
-        };
-
-        http.send(request.body);
+Endpoint.sender = async (request) => {
+    const response = await fetch(request.url, {
+        method: request.method,
+        headers: request.headers,
+        body: request.body,
+        credentials: "same-origin",
     });
+
+    const body = await response.text();
+    const status = response.status as Status;
+    return {body, status};
 };
-
-const serverSender: Sender = async (request) => {
-    // To avoid having code bundlers sniff out that the http
-    // package is being used, the use of the require function
-    // is hidden using an eval statement.
-    const sneakyRequire = eval("require");
-    const http = sneakyRequire("http") as typeof _http;
-
-    return new Promise<SenderResponse>((resolve, reject) => {
-        const req = http.request(
-            request.url,
-            {
-                method: request.method,
-                headers: request.headers,
-            },
-            (res) => {
-                let data = "";
-                res.on("data", (chunk: string) => (data += chunk));
-                res.on("end", () => {
-                    resolve({
-                        status: res.statusCode,
-                        body: data,
-                    } as any);
-                });
-            },
-        );
-
-        req.write(request.body, "utf8", (err?: Error | null) => {
-            req.end();
-            if (err !== undefined) {
-                reject(err);
-            }
-        });
-    });
-};
-
-// Sender value is platform dependent. An implementation
-// for both browser and node globals is included.
-Endpoint.sender = typeof window === "undefined" ? serverSender : browserSender;

@@ -6,10 +6,15 @@ TODO
 - make sender not a global, but remain mockable for tests (can't use mocks if app code replaces sender)
 - design a complete testing story (ex. calling handlers without the network)
 - properly set content-type headers
+- endpoint config is readonly, but that's not deep
+- allow sync runtime type checks (isRequest, isResponse)
+- limit the express req/res in handler for easier mocks
+CHANGELOG
+- remove support for node `call` cause fetch + https
 
  -->
 
-# rickety [![NPM Version](https://img.shields.io/npm/v/rickety.svg)](https://www.npmjs.com/package/rickety) [![NPM Type Definitions](https://img.shields.io/npm/types/rickety.svg)](https://github.com/g-harel/rickety)
+# rickety [![](https://img.shields.io/npm/v/rickety.svg)](https://www.npmjs.com/package/rickety) [![](https://img.shields.io/npm/types/rickety.svg)](https://github.com/g-harel/rickety)
 
 > minimal typescript rpc framework
 
