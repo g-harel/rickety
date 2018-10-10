@@ -1,3 +1,5 @@
+import "isomorphic-unfetch";
+
 import {app} from "./server";
 import {run} from "./client";
 

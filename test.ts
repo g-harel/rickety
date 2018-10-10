@@ -1,17 +1,9 @@
-import {Config, Endpoint, SenderRequest} from ".";
+import express from "express";
+import supertest from "supertest";
 
-let sender: jest.Mock;
-let lastSent: SenderRequest;
+import {Config, Endpoint, SenderRequest, SenderResponse, Sender} from ".";
 
 describe("Endpoint", () => {
-    beforeEach(() => {
-        sender = jest.fn((request) => {
-            lastSent = request;
-            return {status: 200, body: "{}"};
-        });
-        Endpoint.sender = sender;
-    });
-
     it("should accept a path in the constructor", () => {
         const path = "/api/test";
         const e = new Endpoint(path);
@@ -30,6 +22,18 @@ describe("Endpoint", () => {
     });
 
     describe("call", () => {
+        let sender: jest.Mock;
+        let lastSent: SenderRequest;
+
+        // Endpoint sender is replaced with a fresh mock before each test.
+        beforeEach(() => {
+            sender = jest.fn((request) => {
+                lastSent = request;
+                return {status: 200, body: "{}"};
+            });
+            Endpoint.sender = sender;
+        });
+
         it("should concatenate the base and the path to form the url", async () => {
             const config: Config = {
                 base: "base123",
@@ -78,8 +82,60 @@ describe("Endpoint", () => {
                 status: 400,
                 body: "{}",
             });
-            const endpoint = await new Endpoint(config);
-            expect(endpoint.call({})).rejects.toThrow(/status.*400/);
+            const endpoint = new Endpoint(config);
+            await expect(endpoint.call({})).rejects.toThrow(/status.*400/);
+        });
+
+        it("should truncate the request body in the error message when the status is unexpected", async () => {
+            const message = Array(1000).join("-");
+            const config: Config = {
+                path: "/test",
+                expect: 201,
+            };
+            sender.mockReturnValueOnce({
+                status: 200,
+                body: message,
+            });
+            const endpoint = new Endpoint(config);
+            await expect(endpoint.call({})).rejects.toThrow(/^.{0,200}\.\.\.$/);
+        });
+    });
+
+    describe("handler", () => {
+        let app: express.Express;
+
+        // The app is replaced with a fresh instance before each test.
+        beforeEach(() => {
+            app = express();
+            Endpoint.sender = superSender(app);
+        });
+
+        it("should handle run when endpoint is called", async () => {
+            const test = jest.fn(() => {});
+            const endpoint = new Endpoint("/path123");
+            app.use(endpoint.handler(test));
+            await endpoint.call({});
+            expect(test).toHaveBeenCalled();
         });
     });
 });
+
+// The test sender uses supertest to simulate request
+// being sent to the app's handlers.
+const superSender = (app: express.Express): Sender => async (request) => {
+    const method = request.method.toLowerCase();
+    let req: supertest.Test = (supertest(app) as any)[method](request.url);
+    Object.keys(request.headers).forEach((name) => {
+        req = req.set(name, request.headers[name]);
+    });
+    req.send(request.body)
+    return new Promise<SenderResponse>((resolve, reject) => {
+        req.end((err, response) => {
+            if (err) reject(err);
+            resolve({
+                status: response.status as any,
+                body: JSON.stringify(response.body),
+            })
+        });
+    });
+}
