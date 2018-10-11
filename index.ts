@@ -148,8 +148,8 @@ export class Endpoint<RQ, RS> {
             }
 
             res.status(200);
+            res.set("Content-Type", "application/json");
             res.send(rawResponseData);
-            return next();
         };
     }
 }
