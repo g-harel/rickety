@@ -1,5 +1,4 @@
 import express from "express";
-import _http from "http";
 
 // prettier-ignore
 export type Method = "GET" | "HEAD" | "POST" | "PUT" | "DELETE" | "CONNECT" | "OPTIONS" | "TRACE" | "PATCH";
@@ -40,10 +39,13 @@ export interface Headers {
 
 // A stricter version of the Config which demands defined values.
 export interface StrictConfig {
-    method: Method;
-    base: string;
-    path: string;
-    expect: Status[];
+    readonly method: Method;
+    readonly base: string;
+    readonly path: string;
+    readonly expect: {
+        readonly length: number;
+        readonly [n: number]: Status;
+    };
 }
 
 // Request handlers contain the server code that transforms
@@ -90,8 +92,7 @@ export class Endpoint<RQ, RS> {
         const headers: Headers = Object.assign({}, ...h);
 
         const res = await Endpoint.sender({method, url, body, headers});
-
-        if (this.config.expect.indexOf(res.status as any) < 0) {
+        if ((this.config.expect as any).indexOf(res.status as any) < 0) {
             let message = res.body;
             if (message.length > 64) {
                 message = message.substr(0, 64) + "...";

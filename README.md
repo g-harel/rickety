@@ -6,7 +6,6 @@ TODO
 - make sender not a global, but remain mockable for tests (can't use mocks if app code replaces sender)
 - design a complete testing story (ex. calling handlers without the network)
 - properly set content-type headers
-- endpoint config is readonly, but that's not deep
 - allow sync runtime type checks (isRequest, isResponse)
 - limit the express req/res in handler for easier mocks
 CHANGELOG
