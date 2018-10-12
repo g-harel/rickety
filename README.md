@@ -7,8 +7,9 @@ TODO
 - design a complete testing story (ex. calling handlers without the network)
 - properly set content-type headers
 - allow sync runtime type checks (isRequest, isResponse)
-- limit the express req/res in handler for easier mocks
+
 CHANGELOG
+- make endpoint config private
 - remove support for node `call` cause fetch + https
 
  -->
@@ -20,7 +21,6 @@ CHANGELOG
 * Simple package interface
 * Configurable endpoint definitions
 * No runtime dependencies
-* Supports endpoint invocation from NodeJS
 
 ## Install
 
@@ -56,8 +56,8 @@ const response = await endpoint.call(request);
 ## API
 
 ```typescript
-export type Method = // HTTP Method (GET, POST, ...)
-export type Status = // HTTP Status (200, 404, 500, ...)
+export type Method // HTTP Method (GET, POST, ...)
+export type Status // HTTP Status (200, 404, 500, ...)
 
 export interface Config {
     method?: Method;             // "POST"
@@ -76,7 +76,6 @@ export interface RequestHandler<RQ, RS> {
 
 export class Endpoint<RQ, RS> {
     static sender: Sender;
-    readonly config: StrictConfig; // Config with populated default values.
 
     constructor(config: Config);
     constructor(path: string);

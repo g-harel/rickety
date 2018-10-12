@@ -39,13 +39,10 @@ export interface Headers {
 
 // A stricter version of the Config which demands defined values.
 export interface StrictConfig {
-    readonly method: Method;
-    readonly base: string;
-    readonly path: string;
-    readonly expect: {
-        readonly length: number;
-        readonly [n: number]: Status;
-    };
+    method: Method;
+    base: string;
+    path: string;
+    expect: Status[];
 }
 
 // Request handlers contain the server code that transforms
@@ -62,7 +59,7 @@ export interface RequestHandler<RQ, RS> {
 export class Endpoint<RQ, RS> {
     public static sender: Sender;
 
-    public readonly config: StrictConfig;
+    private config: StrictConfig;
 
     constructor(pathOrConfig: Config | string) {
         // After this block, the input argument can only have

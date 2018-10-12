@@ -12,14 +12,14 @@ export const sender = (app: express.Express): Sender => async (request) => {
     Object.keys(request.headers).forEach((name) => {
         req = req.set(name, request.headers[name]);
     });
-    req.send(request.body)
+    req.send(request.body);
     return new Promise<SenderResponse>((resolve, reject) => {
         req.end((err, response) => {
             if (err) reject(err);
             resolve({
                 status: response.status as any,
                 body: JSON.stringify(response.body),
-            })
+            });
         });
     });
-}
+};

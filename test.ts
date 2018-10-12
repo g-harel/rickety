@@ -1,7 +1,7 @@
 import express from "express";
+import supertest from "supertest";
 
 import {Config, Endpoint, SenderRequest} from ".";
-import {sender} from "./supertest";
 
 describe("Endpoint.call", () => {
     let sender: jest.Mock;
@@ -89,75 +89,98 @@ describe("Endpoint.handler", () => {
     // The app is replaced with a fresh instance before each test.
     beforeEach(() => {
         app = express();
-        Endpoint.sender = sender(app);
     });
 
     it("should run handler when endpoint is called", async () => {
+        const path = "/path123";
         const test = jest.fn(() => {});
-        const endpoint = new Endpoint("/path123");
+        const endpoint = new Endpoint(path);
         app.use(endpoint.handler(test));
-        await endpoint.call({});
+
+        await supertest(app)
+            .post(path)
+            .send("{}");
         expect(test).toHaveBeenCalled();
     });
 
-    it("should not run handler when other endpoint is called", async () => {
+    it("should only run handler when endpoint is matched", async () => {
+        const path1 = "/path1";
         const test1 = jest.fn(() => {});
         const endpoint1 = new Endpoint({
             method: "PUT",
-            path: "/path1",
+            path: path1,
         });
         app.use(endpoint1.handler(test1));
 
         const test2 = jest.fn(() => {});
-        const endpoint2 = new Endpoint("/path1");
+        const endpoint2 = new Endpoint(path1);
         app.use(endpoint2.handler(test2));
 
+        const path3 = "/path3";
         const test3 = jest.fn(() => {});
-        const endpoint3 = new Endpoint("/path3");
+        const endpoint3 = new Endpoint(path3);
         app.use(endpoint3.handler(test3));
 
         // Test non-matching path.
-        await endpoint3.call({});
+        await supertest(app)
+            .post(path3)
+            .send("{}");
         expect(test1).not.toHaveBeenCalled();
         expect(test2).not.toHaveBeenCalled();
         expect(test3).toHaveBeenCalled();
 
         // Test non-matching method.
-        await endpoint2.call({});
-        expect(test2).toHaveBeenCalled();
+        await supertest(app)
+            .post(path1)
+            .send("{}");
         expect(test1).not.toHaveBeenCalled();
+        expect(test2).toHaveBeenCalled();
     });
 
-    it("should receive the parsed request payload", async () => {
+    it("should call handler with the parsed request payload", async () => {
+        const path = "/path";
         const test = jest.fn(() => {});
         const payload = {test: true, arr: [0, ""]};
-        const endpoint = new Endpoint("/path");
+        const endpoint = new Endpoint(path);
         app.use(endpoint.handler(test));
-        await endpoint.call(payload);
+
+        await supertest(app)
+            .post(path)
+            .send(JSON.stringify(payload));
         expect(test.mock.calls[0][0]).toEqual(payload);
     });
 
-    it("should transmit response to client call", async () => {
+    it("should respond with stringified response from handler", async () => {
+        const path = "/path";
         const payload = {test: true, arr: [0, ""]};
-        const endpoint = new Endpoint("/path");
+        const endpoint = new Endpoint(path);
         app.use(endpoint.handler(() => payload));
-        const response = await endpoint.call({a: 0});
-        expect(response).toEqual(payload);
+
+        const response = await supertest(app)
+            .post(path)
+            .send("{}");
+        expect(response.body).toEqual(payload);
     });
 
-    it("should use the built-in express error handling", async () => {
+    it("should defer errors to express", async () => {
+        const path = "/path";
         const test = jest.fn();
         const error = new Error("test");
-        const endpoint = new Endpoint("/path");
-        app.use(endpoint.handler(() => {
-            throw error;
-        }));
+        const endpoint = new Endpoint(path);
+        app.use(
+            endpoint.handler(() => {
+                throw error;
+            }),
+        );
         app.use((err: any, _0: any, res: any, _1: any) => {
             test(err);
             res.sendStatus(200);
             return;
         });
-        await endpoint.call({});
+
+        await supertest(app)
+            .post(path)
+            .send("{}");
         expect(test).toHaveBeenCalledWith(error);
     });
 });
