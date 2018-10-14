@@ -1,5 +1,7 @@
 import express from "express";
 
+import {Sender} from "./sender";
+
 // prettier-ignore
 export type Method = "GET" | "HEAD" | "POST" | "PUT" | "DELETE" | "CONNECT" | "OPTIONS" | "TRACE" | "PATCH";
 
@@ -57,7 +59,18 @@ export interface RequestHandler<RQ, RS> {
 // An endpoint contains its configuration as well as the types
 // of the request and response values.
 export class Endpoint<RQ, RS> {
-    public static sender: Sender;
+    private static sender: Sender = async (request) => {
+        const response = await fetch(request.url, {
+            method: request.method,
+            headers: request.headers,
+            body: request.body,
+            credentials: "same-origin",
+        });
+
+        const body = await response.text();
+        const status = response.status as Status;
+        return {body, status};
+    };
 
     private config: StrictConfig;
 
@@ -86,9 +99,12 @@ export class Endpoint<RQ, RS> {
         const url = `${this.config.base}${this.config.path}`;
         const body = JSON.stringify(data);
         const method = this.config.method;
-        const headers: Headers = Object.assign({
-            "Content-Type": "application/json",
-        }, ...h);
+        const headers: Headers = Object.assign(
+            {
+                "Content-Type": "application/json",
+            },
+            ...h,
+        );
 
         const res = await Endpoint.sender({method, url, body, headers});
         if ((this.config.expect as any).indexOf(res.status as any) < 0) {
@@ -153,32 +169,3 @@ export class Endpoint<RQ, RS> {
         };
     }
 }
-
-export interface SenderResponse {
-    status: Status;
-    body: string;
-}
-
-export interface SenderRequest {
-    method: string;
-    url: string;
-    headers: Headers;
-    body: string;
-}
-
-export interface Sender {
-    (request: SenderRequest): Promise<SenderResponse>;
-}
-
-Endpoint.sender = async (request) => {
-    const response = await fetch(request.url, {
-        method: request.method,
-        headers: request.headers,
-        body: request.body,
-        credentials: "same-origin",
-    });
-
-    const body = await response.text();
-    const status = response.status as Status;
-    return {body, status};
-};

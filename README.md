@@ -1,13 +1,12 @@
 <!--
 
 TODO
-- config allowing data transfer through get params (URL encode) (sending nested object in query params is ??? but receiving should work)
 - make errors more helpful / clear
-- make sender not a global, but remain mockable for tests (can't use mocks if app code replaces sender)
 - design a complete testing story (ex. calling handlers without the network)
 - allow sync runtime type checks (isRequest, isResponse)
 
 CHANGELOG
+- make sender private
 - properly set content-type headers
 - make endpoint config private
 - remove support for node `call` cause fetch + https

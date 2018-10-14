@@ -1,19 +1,18 @@
 import express from "express";
 import supertest from "supertest";
 
-import {Config, Endpoint, SenderRequest} from ".";
+import {Config, Endpoint} from ".";
+import {SenderRequest} from "./sender";
 
 describe("Endpoint.call", () => {
-    let sender: jest.Mock;
+    let sender: jest.SpyInstance;
     let lastSent: SenderRequest;
-
-    // Endpoint sender is replaced with a fresh mock before each test.
     beforeEach(() => {
-        sender = jest.fn((request) => {
+        sender = jest.spyOn(Endpoint as any, "sender");
+        sender.mockImplementation((request: any) => {
             lastSent = request;
             return {status: 200, body: "{}"};
         });
-        Endpoint.sender = sender;
     });
 
     it("should concatenate the base and the path to form the url", async () => {
@@ -87,7 +86,6 @@ describe("Endpoint.call", () => {
 describe("Endpoint.handler", () => {
     let app: express.Express;
 
-    // The app is replaced with a fresh instance before each test.
     beforeEach(() => {
         app = express();
     });

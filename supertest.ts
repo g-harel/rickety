@@ -1,7 +1,7 @@
 import express from "express";
 import supertest from "supertest";
 
-import {Sender, SenderResponse} from ".";
+import {Sender, SenderResponse} from "./sender";
 
 // This sender uses supertest to simulate requests being sent to the
 // given express app. It can be used during integration tests to
