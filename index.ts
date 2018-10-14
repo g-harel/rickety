@@ -86,7 +86,9 @@ export class Endpoint<RQ, RS> {
         const url = `${this.config.base}${this.config.path}`;
         const body = JSON.stringify(data);
         const method = this.config.method;
-        const headers: Headers = Object.assign({}, ...h);
+        const headers: Headers = Object.assign({
+            "Content-Type": "application/json",
+        }, ...h);
 
         const res = await Endpoint.sender({method, url, body, headers});
         if ((this.config.expect as any).indexOf(res.status as any) < 0) {

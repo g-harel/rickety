@@ -32,6 +32,7 @@ describe("Endpoint.call", () => {
             list: [0, "test", null],
         };
         await new Endpoint(path).call(request);
+        expect(lastSent.headers["Content-Type"]).toContain("application/json");
         expect(lastSent.body).toBe(JSON.stringify(request));
     });
 
@@ -148,6 +149,19 @@ describe("Endpoint.handler", () => {
             .post(path)
             .send(JSON.stringify(payload));
         expect(test.mock.calls[0][0]).toEqual(payload);
+    });
+
+    it("should respond with stringified response from handler", async () => {
+        const path = "/path";
+        const payload = {test: true, arr: [0, ""]};
+        const endpoint = new Endpoint(path);
+        app.use(endpoint.handler(() => payload));
+
+        const response = await supertest(app)
+            .post(path)
+            .send("{}");
+        expect(response.header["content-type"]).toContain("application/json");
+        expect(response.body).toEqual(payload);
     });
 
     it("should respond with stringified response from handler", async () => {

@@ -5,10 +5,10 @@ TODO
 - make errors more helpful / clear
 - make sender not a global, but remain mockable for tests (can't use mocks if app code replaces sender)
 - design a complete testing story (ex. calling handlers without the network)
-- properly set content-type headers
 - allow sync runtime type checks (isRequest, isResponse)
 
 CHANGELOG
+- properly set content-type headers
 - make endpoint config private
 - remove support for node `call` cause fetch + https
 
