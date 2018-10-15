@@ -1,6 +1,6 @@
 import express from "express";
 
-import {Sender} from "./sender";
+import {Sender} from "./link";
 
 // prettier-ignore
 export type Method = "GET" | "HEAD" | "POST" | "PUT" | "DELETE" | "CONNECT" | "OPTIONS" | "TRACE" | "PATCH";

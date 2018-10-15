@@ -1,4 +1,9 @@
 import {userByName} from "../common/endpoints";
+import {link, unlink} from "../../link";
+import {app} from "../backend/app";
+
+link.express(app);
+unlink();
 
 const call = () =>
     userByName.call({

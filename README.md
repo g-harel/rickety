@@ -2,10 +2,12 @@
 
 TODO
 - make errors more helpful / clear
-- design a complete testing story (ex. calling handlers without the network)
 - allow sync runtime type checks (isRequest, isResponse)
+- add react in example/frontend
+- add tests in example
 
 CHANGELOG
+- design a complete testing story (ex. calling handlers without the network)
 - make sender private
 - properly set content-type headers
 - make endpoint config private
@@ -74,40 +76,61 @@ export interface RequestHandler<RQ, RS> {
 }
 
 export class Endpoint<RQ, RS> {
-    static sender: Sender;
-
-    constructor(config: Config);
     constructor(path: string);
+    constructor(config: Config);
 
     call(data: RQ, ...headers: Headers[]): Promise<RS>;
     handler(handler: RequestHandler<RQ, RS>): express.RequestHandler;
 }
 ```
 
-### Advanced
+## Testing
 
-The request sender can be replaced to modify the implementation or mock the network during tests.
+When testing clients, the endpoint's `call` function can be spied on to test behavior with mocked return values or assert on how it is being called.
 
-```typescript
-Endpoint.sender = customSenderImplementation;
+```tsx
+import {getUserData} from "../endpoints";
+
+test("homepage fetches data", () => {
+    const spy = jest.spyOn(getUserData, "call");
+    spy.mockReturnValue({ ... });
+
+    mount(<Homepage ... />);
+
+    expect(spy).toHaveBeenCalledWith( ... );
+});
 ```
 
-```typescript
-export interface SenderRequest {
-    method: string;
-    url: string;
-    headers: Headers;
-    body: string;
-}
+For integration tests, the express app instance can be linked to the endpoints directly. This means clients can invoke handlers as they normally would, but rickety will not involve the network.
 
-export interface SenderResponse {
-    status: Status;
-    body: string;
-}
+```tsx
+import {link} from "rickety/link";
 
-export interface Sender {
-    (request: SenderRequest): Promise<SenderResponse>;
-}
+import {createUserByEmail} from "../endpoints";
+import {app} from "../backend/app";
+import {database} from "../backend/database";
+
+link.express(app);
+
+test("new user is created in the database", async () => {
+    const spy = jest.spyOn(database, "createUser");
+    spy.mockReturnValue({ ... });
+
+    await createUserByEmail( ... );
+
+    expect(spy).toHaveBeenCalledWith( ... );
+});
+
+test("new sign-ups should add a user to the database", async () => {
+    const spy = jest.spyOn(database, "createUser");
+    spy.mockReturnValue({ ... });
+
+    const wrapper = mount(<SignUp ... />);
+    const submit = wrapper.find('button');
+    submit.simulate('click');
+
+    expect(spy).toHaveBeenCalledWith( ... );
+});
 ```
 
 ## License

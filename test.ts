@@ -2,11 +2,12 @@ import express from "express";
 import supertest from "supertest";
 
 import {Config, Endpoint} from ".";
-import {SenderRequest} from "./sender";
+import {SenderRequest} from "./link";
 
 describe("Endpoint.call", () => {
     let sender: jest.SpyInstance;
     let lastSent: SenderRequest;
+
     beforeEach(() => {
         sender = jest.spyOn(Endpoint as any, "sender");
         sender.mockImplementation((request: any) => {
