@@ -15,7 +15,7 @@ CHANGELOG
 
  -->
 
-# rickety [![](https://img.shields.io/npm/v/rickety.svg)](https://www.npmjs.com/package/rickety) [![](https://img.shields.io/npm/types/rickety.svg)](https://github.com/g-harel/rickety)
+# rickety [![](https://img.shields.io/npm/v/rickety.svg)](https://www.npmjs.com/package/rickety) [![](https://img.shields.io/npm/types/rickety.svg)](https://github.com/g-harel/rickety) [![](https://travis-ci.org/g-harel/rickety.svg?branch=master)](https://travis-ci.org/g-harel/rickety)
 
 > minimal typescript rpc framework
 
