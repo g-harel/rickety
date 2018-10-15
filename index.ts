@@ -19,8 +19,7 @@ export interface Config {
 
     // The base should contain everything in the url before
     // the path. Default value of "" will send requests to the
-    // same domain on a webpage or will fail when calling
-    // endpoints in the node environment.
+    // same domain.
     base?: string;
 
     // URL path at which the handler will be registered and

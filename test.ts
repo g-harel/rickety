@@ -2,7 +2,7 @@ import express from "express";
 import supertest from "supertest";
 
 import {Config, Endpoint} from ".";
-import {SenderRequest} from "./link";
+import {link, unlink, SenderRequest} from "./link";
 
 describe("Endpoint.call", () => {
     let sender: jest.SpyInstance;
@@ -195,5 +195,87 @@ describe("Endpoint.handler", () => {
             .post(path)
             .send("{}");
         expect(test).toHaveBeenCalledWith(error);
+    });
+});
+
+describe("link.express", () => {
+    let app: express.Express;
+    let endpoint: Endpoint<any, any>;
+
+    beforeEach(() => {
+        app = express();
+        link.express(app);
+        endpoint = new Endpoint("/" + Math.random());
+    });
+
+    it("should send requests to the handler", async () => {
+        const test = jest.fn();
+
+        app.use(endpoint.handler(test));
+        await endpoint.call({});
+
+        expect(test).toHaveBeenCalled();
+    });
+
+    it("should pass along request headers", async () => {
+        const headerName = "Test-Name";
+        const headerValue = "12345";
+        const test = jest.fn();
+
+        app.use(endpoint.handler((_, req) => {
+            test(req.header(headerName));
+            return {};
+        }));
+        await endpoint.call({}, {
+            [headerName]: headerValue,
+        });
+
+        expect(test).toHaveBeenCalledWith(headerValue);
+    });
+
+    it("should pass along the request body", async () => {
+        const payload = {test: true, arr: [0, ""]};
+        const test = jest.fn();
+
+        app.use(endpoint.handler((data) => {
+            test(data);
+            return {};
+        }));
+        await endpoint.call(payload);
+
+        expect(test).toHaveBeenCalledWith(payload);
+    });
+
+    it("should return the response data", async () => {
+        const payload = {test: true, arr: [0, ""]};
+
+        app.use(endpoint.handler(() => payload));
+        const res = await endpoint.call({});
+
+        expect(res).toEqual(payload);
+    });
+});
+
+describe("link.unlink", () => {
+    (window as any).fetch = () => null;
+
+    it("should revert to default implementation", async () => {
+        const fetch = jest.spyOn(window, "fetch");
+        const app = express();
+        const endpoint = new Endpoint("/test");
+
+        fetch.mockReturnValue({
+            status: 200,
+            text: () => "{}",
+        });
+        app.use(endpoint.handler(() => "{}"));
+        link.express(app);
+
+        await endpoint.call({});
+        expect(fetch).not.toHaveBeenCalled();
+
+        unlink();
+        await endpoint.call({});
+        expect(fetch).toHaveBeenCalled();
     });
 });
