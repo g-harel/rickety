@@ -68,20 +68,6 @@ describe("Endpoint.call", () => {
         const endpoint = new Endpoint(config);
         await expect(endpoint.call({})).rejects.toThrow(/status.*400/);
     });
-
-    it("should truncate the request body in the error message when the status is unexpected", async () => {
-        const message = Array(1000).join("-");
-        const config: Config = {
-            path: "/test",
-            expect: 201,
-        };
-        sender.mockReturnValueOnce({
-            status: 200,
-            body: message,
-        });
-        const endpoint = new Endpoint(config);
-        await expect(endpoint.call({})).rejects.toThrow(/^.{0,200}\.\.\.$/);
-    });
 });
 
 describe("Endpoint.handler", () => {
@@ -194,7 +180,7 @@ describe("Endpoint.handler", () => {
         await supertest(app)
             .post(path)
             .send("{}");
-        expect(test).toHaveBeenCalledWith(error);
+        expect(test.mock.calls[0][0].toString()).toMatch(error.toString());
     });
 });
 
@@ -222,13 +208,18 @@ describe("link.express", () => {
         const headerValue = "12345";
         const test = jest.fn();
 
-        app.use(endpoint.handler((_, req) => {
-            test(req.header(headerName));
-            return {};
-        }));
-        await endpoint.call({}, {
-            [headerName]: headerValue,
-        });
+        app.use(
+            endpoint.handler((_, req) => {
+                test(req.header(headerName));
+                return {};
+            }),
+        );
+        await endpoint.call(
+            {},
+            {
+                [headerName]: headerValue,
+            },
+        );
 
         expect(test).toHaveBeenCalledWith(headerValue);
     });
@@ -237,10 +228,12 @@ describe("link.express", () => {
         const payload = {test: true, arr: [0, ""]};
         const test = jest.fn();
 
-        app.use(endpoint.handler((data) => {
-            test(data);
-            return {};
-        }));
+        app.use(
+            endpoint.handler((data) => {
+                test(data);
+                return {};
+            }),
+        );
         await endpoint.call(payload);
 
         expect(test).toHaveBeenCalledWith(payload);

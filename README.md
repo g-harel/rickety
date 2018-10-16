@@ -1,12 +1,11 @@
 <!--
 
 TODO
-- make errors more helpful / clear
-- allow sync runtime type checks (isRequest, isResponse)
 - add react in example/frontend
 - add tests in example
 
 CHANGELOG
+- make errors more helpful / clear
 - design a complete testing story (ex. calling handlers without the network)
 - make sender private
 - properly set content-type headers

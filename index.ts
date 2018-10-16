@@ -1,6 +1,6 @@
 import express from "express";
 
-import {Sender} from "./link";
+import {Sender, SenderResponse} from "./link";
 
 // prettier-ignore
 export type Method = "GET" | "HEAD" | "POST" | "PUT" | "DELETE" | "CONNECT" | "OPTIONS" | "TRACE" | "PATCH";
@@ -81,7 +81,7 @@ export class Endpoint<RQ, RS> {
         }
 
         this.config = {
-            path: pathOrConfig.path,
+            path: pathOrConfig.path || "/",
             base: pathOrConfig.base || "",
             method: pathOrConfig.method || "POST",
             // The expected status is normalized into an array.
@@ -89,14 +89,32 @@ export class Endpoint<RQ, RS> {
         };
     }
 
+    // Helper to throw formatted errors with added information
+    // about the endpoint instance.
+    private error(...messages: any[]): Error {
+        const {method, base, path} = this.config;
+        messages.unshift(`EndpointError (${method} ${base}${path})`);
+        messages = messages.map((message, i) => {
+            return " ".repeat(i) + message.toString();
+        });
+        const e = new Error(messages.join("\n"));
+        return e;
+    }
+
     // The call function sends requests to the configured
     // endpoint using the configured sender function.
     // It returns a promise which may throw errors if there
     // is an issue with the request process or if the status
     // is unexpected.
-    public async call(data: RQ, ...h: Headers[]): Promise<RS> {
+    public async call(requestData: RQ, ...h: Headers[]): Promise<RS> {
+        let body: string;
+        try {
+            body = JSON.stringify(requestData);
+        } catch (e) {
+            throw this.error("Could not stringify request data", e);
+        }
+
         const url = `${this.config.base}${this.config.path}`;
-        const body = JSON.stringify(data);
         const method = this.config.method;
         const headers: Headers = Object.assign(
             {
@@ -105,16 +123,23 @@ export class Endpoint<RQ, RS> {
             ...h,
         );
 
-        const res = await Endpoint.sender({method, url, body, headers});
+        let res: SenderResponse;
+        try {
+            res = await Endpoint.sender({method, url, body, headers});
+        } catch (e) {
+            throw this.error("Request sending failed", e);
+        }
         if ((this.config.expect as any).indexOf(res.status as any) < 0) {
-            let message = res.body;
-            if (message.length > 64) {
-                message = message.substr(0, 64) + "...";
-            }
-            throw new Error(`Unexpected status: ${res.status} ${message}`);
+            throw this.error(`Unexpected status: ${res.status}`, res.body);
         }
 
-        return JSON.parse(res.body);
+        let responseData: RS;
+        try {
+            responseData = JSON.parse(res.body);
+        } catch (e) {
+            throw this.error("Could not parse response data", e, res.body);
+        }
+        return responseData;
     }
 
     // Handler generator returning an express request handler
@@ -134,7 +159,7 @@ export class Endpoint<RQ, RS> {
             // is considered an error since the handler should
             // have been used.
             if (res.headersSent) {
-                return next(new Error("Response has already been sent."));
+                return next(this.error("Response has already been sent."));
             }
 
             // Request body is streamed into a string to be parsed.
@@ -145,21 +170,33 @@ export class Endpoint<RQ, RS> {
                 req.on("end", () => resolve(data));
             });
 
-            let rawResponseData: string = "";
+            let requestData: RQ;
             try {
-                const requestData = JSON.parse(rawRequestData);
-                const responseData = await handler(requestData, req, res);
-                rawResponseData = JSON.stringify(responseData);
+                requestData = JSON.parse(rawRequestData);
             } catch (e) {
-                // Handler and serialization errors are forwarded
-                // to express to be handled gracefully.
-                return next(e);
+                return next(
+                    this.error("Could not parse request data", e, rawRequestData),
+                );
+            }
+
+            let responseData: RS;
+            try {
+                responseData = await handler(requestData, req, res);
+            } catch (e) {
+                return next(this.error("Handler error", e));
             }
 
             // Although the handler is given access to the express
             // response object, it should not send the data itself.
             if (res.headersSent) {
-                return next(new Error("Response was sent by handler."));
+                return next(this.error("Response was sent by handler."));
+            }
+
+            let rawResponseData: string = "";
+            try {
+                rawResponseData = JSON.stringify(responseData);
+            } catch (e) {
+                return this.error("Could not stringify response data", e);
             }
 
             res.status(200);
