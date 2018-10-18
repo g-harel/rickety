@@ -2,25 +2,18 @@
 
 TODO
 - add react in example/frontend
-- add tests in example
-
-CHANGELOG
-- make errors more helpful / clear
-- design a complete testing story (ex. calling handlers without the network)
-- make sender private
-- properly set content-type headers
-- make endpoint config private
-- remove support for node `call` cause fetch + https
+- add more tests in example
 
  -->
 
-# rickety [![](https://img.shields.io/npm/v/rickety.svg)](https://www.npmjs.com/package/rickety) [![](https://img.shields.io/npm/types/rickety.svg)](https://github.com/g-harel/rickety) [![](https://travis-ci.org/g-harel/rickety.svg?branch=master)](https://travis-ci.org/g-harel/rickety)
+# rickety [![](https://img.shields.io/npm/v/rickety.svg)](https://www.npmjs.com/package/rickety) [![](https://travis-ci.org/g-harel/rickety.svg?branch=master)](https://travis-ci.org/g-harel/rickety) [![](https://img.shields.io/npm/types/rickety.svg)](https://github.com/g-harel/rickety)
 
 > minimal typescript rpc framework
 
-* Simple package interface
-* Configurable endpoint definitions
-* No runtime dependencies
+* [Strongly typed endpoints](#usage)
+* [Simple interface](#api)
+* [Convenient testing](#testing)
+* [No runtime dependencies](/package.json)
 
 ## Install
 
@@ -44,6 +37,7 @@ const endpoint = new Endpoint<Request, Response>("/api/...");
 ```typescript
 app.use(
     endpoint.handler(async (request) => {
+        // ...
         return response;
     });
 );
@@ -85,12 +79,13 @@ export class Endpoint<RQ, RS> {
 
 ## Testing
 
-When testing clients, the endpoint's `call` function can be spied on to test behavior with mocked return values or assert on how it is being called.
+The endpoint's `call` function can be spied on to test behavior with mocked return values or assert on how it is being called.
 
 ```tsx
 import {getUserData} from "../endpoints";
+import {Homepage} from "../frontend/components";
 
-test("homepage fetches data", () => {
+test("homepage fetches correct user data", () => {
     const spy = jest.spyOn(getUserData, "call");
     spy.mockReturnValue({ ... });
 
@@ -100,7 +95,7 @@ test("homepage fetches data", () => {
 });
 ```
 
-For integration tests, the express app instance can be linked to the endpoints directly. This means clients can invoke handlers as they normally would, but rickety will not involve the network.
+The express app instance can be "linked" to test handler behavior.
 
 ```tsx
 import {link} from "rickety/link";
@@ -119,8 +114,21 @@ test("new user is created in the database", async () => {
 
     expect(spy).toHaveBeenCalledWith( ... );
 });
+```
 
-test("new sign-ups should add a user to the database", async () => {
+This linking pattern also enables integration tests which involve both client and server code.
+
+```tsx
+import {link} from "rickety/link";
+import {mount} from "enzyme";
+
+import {app} from "../backend/app";
+import {database} from "../backend/database";
+import {SignUp} from "../frontend/components";
+
+link.express(app);
+
+test("should refuse duplicate email addresses", async () => {
     const spy = jest.spyOn(database, "createUser");
     spy.mockReturnValue({ ... });
 
@@ -128,7 +136,7 @@ test("new sign-ups should add a user to the database", async () => {
     const submit = wrapper.find('button');
     submit.simulate('click');
 
-    expect(spy).toHaveBeenCalledWith( ... );
+    expect(wrapper.find(".error")).toContain("...");
 });
 ```
 

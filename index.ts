@@ -58,6 +58,10 @@ export interface RequestHandler<RQ, RS> {
 // An endpoint contains its configuration as well as the types
 // of the request and response values.
 export class Endpoint<RQ, RS> {
+    // Sender is invoked with an object representing an http
+    // request. Its only responsibility is to return a similarly
+    // structured response object. It is private/static to be
+    // a hidden global that can still be manipulated by `./link`.
     private static sender: Sender = async (request) => {
         const response = await fetch(request.url, {
             method: request.method,
