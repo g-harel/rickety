@@ -1,7 +1,6 @@
 <!--
 
 TODO
-- add react in example/frontend
 - add more tests in example
 
  -->

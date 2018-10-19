@@ -1,4 +1,4 @@
-import {Endpoint} from "../..";
+import {Endpoint} from "rickety";
 import {ID, Name, User} from "./types";
 
 export const userByID = new Endpoint<ID, User>("/api/v1/userByID");

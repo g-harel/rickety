@@ -4,7 +4,7 @@ import webpack from "webpack";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 
 const config: webpack.Configuration = {
-    entry: ["./frontend/index.ts"],
+    entry: ["./frontend/index.tsx"],
     output: {
         path: path.resolve("dist"),
     },
@@ -15,11 +15,15 @@ const config: webpack.Configuration = {
     module: {
         rules: [
             {
-                test: /\.[jt]sx?$/,
+                test: /\.tsx?$/,
+                loader: "ts-loader",
+            },
+            {
+                test: /\.jsx?$/,
                 use: {
                     loader: "babel-loader",
                     options: {
-                        plugins: ["@babel/plugin-transform-typescript"],
+                        presets: ["@babel/preset-env"],
                     },
                 },
             },

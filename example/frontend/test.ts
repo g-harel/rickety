@@ -1,5 +1,6 @@
+import {link, unlink} from "rickety/link";
+
 import {userByName} from "../common/endpoints";
-import {link, unlink} from "../../link";
 import {app} from "../backend/app";
 
 link.express(app);

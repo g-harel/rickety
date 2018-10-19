@@ -16,12 +16,8 @@ app.use(
     }),
 );
 
-// The handler can use express request and response objects.
 app.use(
-    userByName.handler(async (data, req, res) => {
-        console.log("called with method", req.method);
-        res.setHeader("User-Agent", "Example/0.0");
-
+    userByName.handler(async (data) => {
         const name = data.name.replace(/\s/g, "").toLowerCase();
 
         const user = await readUser();
