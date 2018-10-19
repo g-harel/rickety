@@ -1,4 +1,4 @@
-import express from "express";
+import {Request, Response} from "express";
 
 import {Sender, SenderResponse} from "./link";
 
@@ -52,7 +52,7 @@ export interface StrictConfig {
 // possible to implement custom behavior like accessing and
 // writing headers when necessary.
 export interface RequestHandler<RQ, RS> {
-    (data: RQ, req: express.Request, res: express.Response): Promise<RS> | RS;
+    (data: RQ, req: Request, res: Response): Promise<RS> | RS;
 }
 
 // An endpoint contains its configuration as well as the types
@@ -148,8 +148,8 @@ export class Endpoint<RQ, RS> {
 
     // Handler generator returning an express request handler
     // from a config and a request handling function.
-    public handler(handler: RequestHandler<RQ, RS>): express.RequestHandler {
-        return async (req, res, next) => {
+    public handler(handler: RequestHandler<RQ, RS>): any {
+        return async (req: Request, res: Response, next: (err?: any) => void) => {
             // Only requests with the correct path and method are handled.
             if (req.path !== this.config.path) {
                 return next();

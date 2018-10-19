@@ -1,4 +1,3 @@
-import {Express} from "express";
 import supertest from "supertest";
 
 import {Endpoint, Headers, Status} from ".";
@@ -25,7 +24,7 @@ const backup: Sender = (Endpoint as any).sender;
 // Express link uses the "supertest" package to directly query the
 // application instead of going through the network. It is intended
 // to be used for integration tests.
-const express = (app: Express) => {
+const express = (app: any) => {
     const sender: Sender = async (request) => {
         const method = request.method.toLowerCase();
         let req: supertest.Test = (supertest(app) as any)[method](request.url);
