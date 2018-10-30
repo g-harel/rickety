@@ -1,12 +1,13 @@
 {
   "scripts": {
-    "start": "ts-node --files backend",
-    "build": "webpack",
-    "dev": "run-p start 'build -- --watch --mode development --display=minimal'",
+    "start": "run-s build start:backend",
+    "start:backend": "ts-node --files backend",
+    "build": "webpack --mode=development --display=minimal",
     "test": "jest"
   },
   "dependencies": {
     "@types/express": "^4.16.0",
+    "chalk": "^2.4.1",
     "express": "^4.16.4",
     "rickety": "^3.0.1",
     "ts-node": "^7.0.1",

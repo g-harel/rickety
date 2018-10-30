@@ -1,11 +1,8 @@
-<!--
+# :scroll: rickety
 
-TODO
-- add more tests in example
-
- -->
-
-# rickety [![](https://img.shields.io/npm/v/rickety.svg)](https://www.npmjs.com/package/rickety) [![](https://travis-ci.org/g-harel/rickety.svg?branch=master)](https://travis-ci.org/g-harel/rickety) [![](https://img.shields.io/npm/types/rickety.svg)](https://github.com/g-harel/rickety)
+[![](https://img.shields.io/npm/v/rickety.svg)](https://www.npmjs.com/package/rickety)
+[![](https://travis-ci.org/g-harel/rickety.svg?branch=master)](https://travis-ci.org/g-harel/rickety)
+[![](https://img.shields.io/npm/types/rickety.svg)](https://github.com/g-harel/rickety)
 
 > minimal typescript rpc framework
 
@@ -13,6 +10,10 @@ TODO
 * [Simple interface](#api)
 * [Convenient testing](#testing)
 * [No runtime dependencies](/package.json)
+
+##
+
+[Try out the example project to experiment with a working setup (including tests)](/example)
 
 ## Install
 

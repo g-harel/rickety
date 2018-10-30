@@ -18,7 +18,7 @@ app.use(
 
 app.use(
     userByName.handler(async (data) => {
-        const name = data.name.replace(/\s/g, "").toLowerCase();
+        const name = data.name.replace(/\s/g, ".").toLowerCase();
 
         const user = await readUser();
         user.name = data.name;
