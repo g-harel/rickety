@@ -30,11 +30,11 @@ export class App extends React.Component<any, State> {
     render() {
         return (
             <div>
-                <button onClick={this.loadUserByID.bind(this, 321)}>
+                <button id="byID" onClick={this.loadUserByID.bind(this, 321)}>
                     Load user by ID (321)
                 </button>
                 <br />
-                <button onClick={this.loadUserByName.bind(this, "John Doe")}>
+                <button id="byName" onClick={this.loadUserByName.bind(this, "John Doe")}>
                     Load user by Name (John Doe)
                 </button>
                 <br />
