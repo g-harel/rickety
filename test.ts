@@ -89,6 +89,35 @@ describe("Endpoint.handler", () => {
         expect(test).toHaveBeenCalled();
     });
 
+    it("should match with the full request path when handling on a base", async () => {
+        const base = "/very/nested";
+        const path = base + "/path";
+        const test = jest.fn(() => {});
+        const endpoint = new Endpoint(path);
+        app.use(base, endpoint.handler(test));
+
+        await supertest(app)
+            .post(path)
+            .send("{}");
+        expect(test).toHaveBeenCalled();
+    });
+
+    it("should match when the base and the partial path match", async () => {
+        const base = "/ver/nested";
+        const path = "/path";
+        const test = jest.fn(() => {});
+        const endpoint = new Endpoint({
+            base,
+            path,
+        });
+        app.use(base, endpoint.handler(test));
+
+        await supertest(app)
+            .post(base + path)
+            .send("{}");
+        expect(test).toHaveBeenCalled();
+    });
+
     it("should only run handler when endpoint is matched", async () => {
         const path1 = "/path1";
         const test1 = jest.fn(() => {});

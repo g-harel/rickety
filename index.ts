@@ -150,12 +150,21 @@ export class Endpoint<RQ, RS> {
     // from a config and a request handling function.
     public handler(handler: RequestHandler<RQ, RS>): any {
         return async (req: Request, res: Response, next: (err?: any) => void) => {
-            // Only requests with the correct path and method are handled.
-            if (req.path !== this.config.path) {
-                return next();
-            }
+            // Only requests with the correct method are handled.
             if (req.method !== this.config.method) {
                 return next();
+            }
+
+            // Requests with the correct full path are handled.
+            // If the endpoint's base path is also defined,
+            // requests with the correct base and path part
+            // are also handled.
+            if (req.originalUrl !== this.config.path) {
+                const baseMatch = req.baseUrl === this.config.base;
+                const pathPartMatch = req.path === this.config.path;
+                if (!baseMatch || !pathPartMatch) {
+                    return next();
+                }
             }
 
             // Handler is not invoked if a different handler
