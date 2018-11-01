@@ -1,7 +1,5 @@
 # 3.0.3
 
-##
-
 Make handler path comparing use `req.originalUrl` instead of `req.path`.
 
 ```typescript
