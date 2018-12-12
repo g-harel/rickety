@@ -1,19 +1,21 @@
 import express from "express";
 import supertest from "supertest";
 
-import {Config, Endpoint} from ".";
-import {link, unlink, LinkRequest} from "./link";
+import {Client, Endpoint} from ".";
+import {link} from "./link";
 
 describe("Endpoint.call", () => {
     let sender: jest.SpyInstance;
     let lastSent: LinkRequest;
+    let client: Client;
 
     beforeEach(() => {
-        sender = jest.spyOn(Endpoint as any, "sender");
-        sender.mockImplementation((request: any) => {
+        client = new Client();
+        sender = jest.fn(async (request) => {
             lastSent = request;
             return {status: 200, body: "{}"};
         });
+        client.use(sender as any);
     });
 
     it("should concatenate the base and the path to form the url", async () => {
@@ -21,7 +23,7 @@ describe("Endpoint.call", () => {
             base: "base123",
             path: "/path123",
         };
-        await new Endpoint(config).call({});
+        await client.Endpoint(config).call({});
         expect(lastSent.url).toBe(config.base + config.path);
     });
 
@@ -31,7 +33,7 @@ describe("Endpoint.call", () => {
             test: true,
             list: [0, "test", null],
         };
-        await new Endpoint(path).call(request);
+        await client.Endpoint(path).call(request);
         expect(lastSent.headers["Content-Type"]).toContain("application/json");
         expect(lastSent.body).toBe(JSON.stringify(request));
     });
@@ -41,19 +43,8 @@ describe("Endpoint.call", () => {
             method: "HEAD",
             path: "/path123",
         };
-        await new Endpoint(config).call({});
+        await client.Endpoint(config).call({});
         expect(lastSent.method).toBe(config.method);
-    });
-
-    it("should collapse headers together", async () => {
-        const headers: Array<Record<string, string>> = [
-            {testA: "test"},
-            {testB: "test"},
-        ];
-        await new Endpoint("/test").call({}, ...headers);
-        for (let headerSubset of headers) {
-            expect(lastSent.headers).toMatchObject(headerSubset);
-        }
     });
 
     it("should throw an error if the status code not expected", async () => {
@@ -65,22 +56,24 @@ describe("Endpoint.call", () => {
             status: 400,
             body: "{}",
         });
-        const endpoint = new Endpoint(config);
+        const endpoint = client.Endpoint(config);
         await expect(endpoint.call({})).rejects.toThrow(/status.*400/);
     });
 });
 
 describe("Endpoint.handler", () => {
     let app: express.Express;
+    let client: Client;
 
     beforeEach(() => {
         app = express();
+        client = new Client();
     });
 
     it("should run handler when endpoint is called", async () => {
         const path = "/path123";
         const test = jest.fn(() => {});
-        const endpoint = new Endpoint(path);
+        const endpoint = client.Endpoint(path);
         app.use(endpoint.handler(test));
 
         await supertest(app)
@@ -93,7 +86,7 @@ describe("Endpoint.handler", () => {
         const base = "/very/nested";
         const path = base + "/path";
         const test = jest.fn(() => {});
-        const endpoint = new Endpoint(path);
+        const endpoint = client.Endpoint(path);
         app.use(base, endpoint.handler(test));
 
         await supertest(app)
@@ -106,7 +99,7 @@ describe("Endpoint.handler", () => {
         const base = "/ver/nested";
         const path = "/path";
         const test = jest.fn(() => {});
-        const endpoint = new Endpoint({
+        const endpoint = client.Endpoint({
             base,
             path,
         });
@@ -121,19 +114,19 @@ describe("Endpoint.handler", () => {
     it("should only run handler when endpoint is matched", async () => {
         const path1 = "/path1";
         const test1 = jest.fn(() => {});
-        const endpoint1 = new Endpoint({
+        const endpoint1 = client.Endpoint({
             method: "PUT",
             path: path1,
         });
         app.use(endpoint1.handler(test1));
 
         const test2 = jest.fn(() => {});
-        const endpoint2 = new Endpoint(path1);
+        const endpoint2 = client.Endpoint(path1);
         app.use(endpoint2.handler(test2));
 
         const path3 = "/path3";
         const test3 = jest.fn(() => {});
-        const endpoint3 = new Endpoint(path3);
+        const endpoint3 = client.Endpoint(path3);
         app.use(endpoint3.handler(test3));
 
         // Test non-matching path.
@@ -156,7 +149,7 @@ describe("Endpoint.handler", () => {
         const path = "/path";
         const test = jest.fn(() => {});
         const payload = {test: true, arr: [0, ""]};
-        const endpoint = new Endpoint(path);
+        const endpoint = client.Endpoint(path);
         app.use(endpoint.handler(test));
 
         await supertest(app)
@@ -168,7 +161,7 @@ describe("Endpoint.handler", () => {
     it("should respond with stringified response from handler", async () => {
         const path = "/path";
         const payload = {test: true, arr: [0, ""]};
-        const endpoint = new Endpoint(path);
+        const endpoint = client.Endpoint(path);
         app.use(endpoint.handler(() => payload));
 
         const response = await supertest(app)
@@ -181,7 +174,7 @@ describe("Endpoint.handler", () => {
     it("should respond with stringified response from handler", async () => {
         const path = "/path";
         const payload = {test: true, arr: [0, ""]};
-        const endpoint = new Endpoint(path);
+        const endpoint = client.Endpoint(path);
         app.use(endpoint.handler(() => payload));
 
         const response = await supertest(app)
@@ -194,7 +187,7 @@ describe("Endpoint.handler", () => {
         const path = "/path";
         const test = jest.fn();
         const error = new Error("test");
-        const endpoint = new Endpoint(path);
+        const endpoint = client.Endpoint(path);
         app.use(
             endpoint.handler(() => {
                 throw error;
@@ -215,12 +208,14 @@ describe("Endpoint.handler", () => {
 
 describe("link.express", () => {
     let app: express.Express;
+    let client: Client;
     let endpoint: Endpoint<any, any>;
 
     beforeEach(() => {
         app = express();
-        link.express(app);
-        endpoint = new Endpoint("/" + Math.random());
+        client = new Client();
+        client.use(link.express(app));
+        endpoint = client.Endpoint("/" + Math.random());
     });
 
     it("should send requests to the handler", async () => {
@@ -243,12 +238,14 @@ describe("link.express", () => {
                 return {};
             }),
         );
-        await endpoint.call(
-            {},
-            {
-                [headerName]: headerValue,
-            },
-        );
+
+        const sender: Link = async (request) => {
+            request.headers[headerName] = headerValue;
+            return link.express(app)(request);
+        };
+        client.use(sender);
+
+        await endpoint.call({});
 
         expect(test).toHaveBeenCalledWith(headerValue);
     });
@@ -278,25 +275,26 @@ describe("link.express", () => {
     });
 });
 
-describe("link.unlink", () => {
+describe("Client.unlink", () => {
     (window as any).fetch = () => null;
 
     it("should revert to default implementation", async () => {
+        const client = new Client();
         const fetch = jest.spyOn(window, "fetch");
         const app = express();
-        const endpoint = new Endpoint("/test");
+        const endpoint = client.Endpoint("/test");
 
         fetch.mockReturnValue({
             status: 200,
             text: () => "{}",
         });
         app.use(endpoint.handler(() => "{}"));
-        link.express(app);
+        client.use(link.express(app));
 
         await endpoint.call({});
         expect(fetch).not.toHaveBeenCalled();
 
-        unlink();
+        client.unlink();
         await endpoint.call({});
         expect(fetch).toHaveBeenCalled();
     });

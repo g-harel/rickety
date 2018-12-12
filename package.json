@@ -1,6 +1,6 @@
 {
   "name": "rickety",
-  "version": "3.0.3",
+  "version": "4.0.0",
   "description": "minimal typescript rpc framework",
   "author": "g-harel",
   "license": "MIT",
@@ -11,7 +11,7 @@
     "prepack": "npm run build",
     "postpublish": "npm run clean",
     "build": "npm run clean && tsc",
-    "clean": "trash '**/*.js' '**/*.js.map' '**/*.d.ts' '!**/node_modules/**/*'",
+    "clean": "trash '**/*.js' '**/*.js.map' '**/*.d.ts' '!**/node_modules/**/*' '!rickety.d.ts'",
     "format": "prettier --list-different --write --ignore-path .gitignore '**/*.{js,ts}'"
   },
   "dependencies": {

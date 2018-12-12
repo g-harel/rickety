@@ -1,3 +1,20 @@
+# 4.0.0
+
+Remove headers argument from Endpoint.call
+
+```typescript
+// TODO show how to use middleware instead
+```
+
+##
+
+Make Endpoints configurable with a Client (instead of globally)
+
+
+```typescript
+// TODO show how to Client.use instead of link
+```
+
 # 3.0.3
 
 Make handler path comparing use `req.originalUrl` instead of `req.path`.

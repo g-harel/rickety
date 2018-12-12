@@ -1,3 +1,13 @@
+<!--
+
+TODO
+- separate client/endpoint/group into own files
+- update readme/changelog for v4
+- links in sub-packages
+- add middleware (independent of link for tests)
+
+ -->
+
 # :scroll: rickety
 
 [![](https://img.shields.io/npm/v/rickety.svg)](https://www.npmjs.com/package/rickety)
