@@ -2,11 +2,11 @@ import express from "express";
 import supertest from "supertest";
 
 import {Config, Endpoint} from ".";
-import {link, unlink, SenderRequest} from "./link";
+import {link, unlink, LinkRequest} from "./link";
 
 describe("Endpoint.call", () => {
     let sender: jest.SpyInstance;
-    let lastSent: SenderRequest;
+    let lastSent: LinkRequest;
 
     beforeEach(() => {
         sender = jest.spyOn(Endpoint as any, "sender");

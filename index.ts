@@ -1,6 +1,6 @@
 import {Request, Response} from "express";
 
-import {Sender, SenderResponse} from "./link";
+import {Link, LinkResponse} from "./link";
 
 // prettier-ignore
 export type Method = "GET" | "HEAD" | "POST" | "PUT" | "DELETE" | "CONNECT" | "OPTIONS" | "TRACE" | "PATCH";
@@ -33,6 +33,8 @@ export interface Config {
     expect?: Status | Status[];
 }
 
+export type LooseConfig = Config | string;
+
 // Headers passed when invoking an endpoint.
 export interface Headers {
     [name: string]: string;
@@ -55,55 +57,85 @@ export interface RequestHandler<RQ, RS> {
     (data: RQ, req: Request, res: Response): Promise<RS> | RS;
 }
 
+const resolveConfig = (config: LooseConfig): StrictConfig => {
+    // After this block, the input argument can only have
+    // the type of a Config.
+    if (typeof config === "string") {
+        config = {path: config};
+    }
+
+    return {
+        path: config.path || "/",
+        base: config.base || "",
+        method: config.method || "POST",
+        // The expected status is normalized into an array.
+        expect: [].concat(config.expect || (200 as any)) as Status[],
+    };
+}
+
+// Helper to create formatted errors with added information
+// about the endpoint instance.
+const formatError = (config: StrictConfig) => (...messages: any[]) => {
+    const {method, base, path} = config;
+    messages.unshift(`EndpointError (${method} ${base}${path})`);
+    messages = messages.map((message, i) => {
+        return " ".repeat(i) + message.toString();
+    });
+    const e = new Error(messages.join("\n"));
+    return e;
+}
+
+const defaultLink: Link = async (request) => {
+    const response = await fetch(request.url, {
+        method: request.method,
+        headers: request.headers,
+        body: request.body,
+        credentials: "same-origin",
+    });
+
+    const body = await response.text();
+    const status = response.status as Status;
+    return {body, status};
+};
+
+export class Client {
+    // Link is invoked with an object representing an http
+    // request. Its only responsibility is to return a similarly
+    // structured response object.
+    private link: Link = defaultLink;
+
+    public use = (link: Link): Client => {
+        this.link = link;
+        return this;
+    }
+
+    public unlink = (): Client => {
+        this.link = defaultLink;
+        return this;
+    }
+
+    public getLink = (): Link => {
+        return this.link;
+    }
+
+    public Endpoint = <RQ, RS>(config: LooseConfig): Endpoint<RQ, RS> => {
+        return new Endpoint(this, config);
+    }
+}
+
+
 // An endpoint contains its configuration as well as the types
 // of the request and response values.
 export class Endpoint<RQ, RS> {
-    // Sender is invoked with an object representing an http
-    // request. Its only responsibility is to return a similarly
-    // structured response object. It is private/static to be
-    // a hidden global that can still be manipulated by `./link`.
-    private static sender: Sender = async (request) => {
-        const response = await fetch(request.url, {
-            method: request.method,
-            headers: request.headers,
-            body: request.body,
-            credentials: "same-origin",
-        });
-
-        const body = await response.text();
-        const status = response.status as Status;
-        return {body, status};
-    };
-
     private config: StrictConfig;
+    private client: Client;
 
-    constructor(pathOrConfig: Config | string) {
-        // After this block, the input argument can only have
-        // the type of a Config.
-        if (typeof pathOrConfig === "string") {
-            pathOrConfig = {path: pathOrConfig};
-        }
-
-        this.config = {
-            path: pathOrConfig.path || "/",
-            base: pathOrConfig.base || "",
-            method: pathOrConfig.method || "POST",
-            // The expected status is normalized into an array.
-            expect: [].concat(pathOrConfig.expect || (200 as any)) as Status[],
-        };
+    constructor(client: Client, config: LooseConfig) {
+        this.client = client;
+        this.config = resolveConfig(config);
     }
 
-    // Helper to throw formatted errors with added information
-    // about the endpoint instance.
-    private error(...messages: any[]): Error {
-        const {method, base, path} = this.config;
-        messages.unshift(`EndpointError (${method} ${base}${path})`);
-        messages = messages.map((message, i) => {
-            return " ".repeat(i) + message.toString();
-        });
-        const e = new Error(messages.join("\n"));
-        return e;
-    }
+    private error = formatError(this.config);
 
     // The call function sends requests to the configured
     // endpoint using the configured sender function.
@@ -127,9 +159,9 @@ export class Endpoint<RQ, RS> {
             ...h,
         );
 
-        let res: SenderResponse;
+        let res: LinkResponse;
         try {
-            res = await Endpoint.sender({method, url, body, headers});
+            res = await this.client.getLink()({method, url, body, headers});
         } catch (e) {
             throw this.error("Request sending failed", e);
         }
