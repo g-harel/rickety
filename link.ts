@@ -1,5 +1,7 @@
 import supertest from "supertest";
 
+import {Link, LinkResponse} from ".";
+
 // Express link uses the "supertest" package to directly query the
 // application instead of going through the network. It is intended
 // to be used for integration tests.

@@ -1,7 +1,7 @@
 import express from "express";
 import supertest from "supertest";
 
-import {Client, Endpoint, EndpointGroup} from ".";
+import {Client, Endpoint, EndpointGroup, LinkRequest, Config, Link} from ".";
 import {link} from "./link";
 
 test("group", async () => {
@@ -320,30 +320,5 @@ describe("link.express", () => {
         const res = await endpoint.call({});
 
         expect(res).toEqual(payload);
-    });
-});
-
-describe("Client.unlink", () => {
-    (window as any).fetch = () => null;
-
-    it("should revert to default implementation", async () => {
-        const client = new Client();
-        const fetch = jest.spyOn(window, "fetch");
-        const app = express();
-        const endpoint = client.Endpoint("/test");
-
-        fetch.mockReturnValue({
-            status: 200,
-            text: () => "{}",
-        });
-        app.use(endpoint.handler(() => "{}"));
-        client.use(link.express(app));
-
-        await endpoint.call({});
-        expect(fetch).not.toHaveBeenCalled();
-
-        client.unlink();
-        await endpoint.call({});
-        expect(fetch).toHaveBeenCalled();
     });
 });

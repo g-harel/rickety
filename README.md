@@ -1,13 +1,16 @@
 <!--
 
 TODO
-- separate client/endpoint/group into own files
 - update readme/changelog for v4
-- links in sub-packages
-- add middleware (independent of link for tests)
-- client/endpoint timeout
-- detect endpoint conflicts?
-- string response handling?
+- client
+    - add middleware (independent of link for tests)
+    - move base to client
+    - add timeout
+- endpoint
+    - add timeout multiplier
+    - string response handling (no parse)
+- link
+    - move to sub-packages
 
  -->
 
