@@ -5,6 +5,9 @@ TODO
 - update readme/changelog for v4
 - links in sub-packages
 - add middleware (independent of link for tests)
+- client/endpoint timeout
+- detect endpoint conflicts?
+- string response handling?
 
  -->
 

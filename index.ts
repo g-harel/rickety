@@ -196,48 +196,78 @@ export class Endpoint<RQ, RS> implements Callable<RQ, RS> {
     }
 }
 
-interface LooseQuery {
-    [name: string]: LooseQuery | Callable<any, any>;
-}
+const read = (obj: any, addr: string[]): any => {
+    let current = obj;
+    for (let i = 0; i < addr.length; i++) {
+        const key = addr[i];
 
-type GroupRequest<Q extends LooseQuery> = {
-    [N in keyof Q]:
-        Q[N] extends LooseQuery ? GroupRequest<Q[N]> :
-        Q[N] extends Callable<infer RQ, infer RS> ? RQ :
-        never;
-}
+        if (i === addr.length - 1) {
+            return current[key];
+        }
 
-type GroupResponse<Q extends LooseQuery> = {
-    [N in keyof Q]:
-        Q[N] extends LooseQuery ? GroupResponse<Q[N]> :
-        Q[N] extends Callable<infer RQ, infer RS> ? RS :
-        never;
-}
-
-class Group<T extends LooseQuery> {
-    private query: T;
-
-    constructor(q: T) {
-        this.query = q as any;
+        if (!current[key]) {
+            const prettyObj = JSON.stringify(obj, null, 2);
+            throw new Error(`invalid read address [${addr}] in\n${prettyObj}`);
+        }
+        current = current[key];
     }
-
-    public call = (request: GroupRequest<T>): Promise<GroupResponse<T>> => {
-        return {} as any;
-    };
-}
-
-const client = new Client();
-
-const endpoint = client.Endpoint<string, number>("/test");
-
-const query = new Group({
-    test: endpoint,
-    tes: {},
-});
-
-const fn = async () => {
-    const a = await query.call({test: "", tes: {}});
-    const b: number = a.test;
 };
 
+const write = (obj: any, addr: string[], value: any) => {
+    let current = obj;
+    for (let i = 0; i < addr.length; i++) {
+        const key = addr[i];
 
+        if (i === addr.length - 1) {
+            current[key] = value;
+            return;
+        }
+
+        if (!current[key]) {
+            current[key] = {};
+        }
+        current = current[key];
+    }
+};
+
+const isCallable = (c: any): c is Callable<any, any> => {
+    if (!c.call) {
+        return false;
+    }
+    return c instanceof Endpoint || c instanceof EndpointGroup;
+};
+
+export class EndpointGroup<G extends Group>
+    implements Callable<GroupRequest<G>, GroupResponse<G>> {
+    private group: G;
+
+    constructor(group: G) {
+        this.group = group;
+    }
+
+    public call = async (request: GroupRequest<G>): Promise<GroupResponse<G>> => {
+        const promises: Array<Promise<any>> = [];
+        const addresses: string[][] = [];
+
+        const call = (obj: any, addr: string[]): void => {
+            Object.keys(obj).forEach((key) => {
+                const current = obj[key];
+                const currentAddr = [...addr, key];
+                if (isCallable(current)) {
+                    promises.push(current.call(read(request, currentAddr)));
+                    addresses.push(currentAddr);
+                    return;
+                }
+                call(current, currentAddr);
+            });
+        };
+        call(this.group, []);
+
+        const response = {};
+        const results = await Promise.all(promises);
+        results.forEach((result, i) => {
+            write(response, addresses[i], result);
+        });
+        return response as any;
+    };
+}

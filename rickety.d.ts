@@ -63,3 +63,19 @@ interface Link {
 interface Callable<RQ, RS> {
     call(requestData: RQ): Promise<RS>;
 }
+
+interface Group {
+    [name: string]: Group | Callable<any, any>;
+}
+
+type GroupRequest<G extends Group> = {
+    [N in keyof G]: G[N] extends Group
+        ? GroupRequest<G[N]>
+        : G[N] extends Callable<infer RQ, infer RS> ? RQ : never
+};
+
+type GroupResponse<G extends Group> = {
+    [N in keyof G]: G[N] extends Group
+        ? GroupResponse<G[N]>
+        : G[N] extends Callable<infer RQ, infer RS> ? RS : never
+};

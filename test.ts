@@ -1,8 +1,56 @@
 import express from "express";
 import supertest from "supertest";
 
-import {Client, Endpoint} from ".";
+import {Client, Endpoint, EndpointGroup} from ".";
 import {link} from "./link";
+
+test("group", async () => {
+    const client = new Client();
+
+    client.use(async (request: LinkRequest) => {
+        return {
+            status: 200,
+            body: `{"response": ${request.body}}`,
+        };
+    });
+
+    const endpoint = client.Endpoint<string, {response: string}>("/test");
+
+    const query = new EndpointGroup({
+        a: endpoint,
+        b: {
+            c: endpoint,
+            d: {
+                e: endpoint,
+                f: endpoint,
+            },
+        },
+        tes: {},
+    });
+
+    const query2 = new EndpointGroup({
+        nested: query,
+    });
+
+    const fn = async () => {
+        const a = await query2.call({
+            nested: {
+                a: "a-data",
+                b: {
+                    c: "c-data",
+                    d: {
+                        e: "e-data",
+                        f: "f-data",
+                    },
+                },
+                tes: {},
+            },
+        });
+        console.log(JSON.stringify(a, null, 2));
+    };
+
+    await fn();
+});
 
 describe("Endpoint.call", () => {
     let sender: jest.SpyInstance;
