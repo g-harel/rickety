@@ -1,5 +1,3 @@
-import {Status} from ".";
-
 export interface LinkRequest {
     method: string;
     url: string;
@@ -8,7 +6,7 @@ export interface LinkRequest {
 }
 
 export interface LinkResponse {
-    status: Status;
+    status: number;
     body: string;
 }
 
@@ -25,7 +23,7 @@ const defaultLink: Link = async (request) => {
     });
 
     const body = await response.text();
-    const status = response.status as Status;
+    const status = response.status;
     return {body, status};
 };
 

@@ -1,6 +1,6 @@
 # 4.0.0
 
-Remove headers argument from Endpoint.call
+Remove headers argument from Endpoint.call.
 
 ```typescript
 // TODO show how to use middleware instead
@@ -8,7 +8,7 @@ Remove headers argument from Endpoint.call
 
 ##
 
-Make Endpoints configurable with a Client (instead of globally)
+Make Endpoints configurable with a Client (instead of globally).
 
 
 ```typescript
@@ -17,7 +17,7 @@ Make Endpoints configurable with a Client (instead of globally)
 
 ##
 
-Add construct to group endpoints into a single callable entity
+Add construct to group endpoints into a single callable entity.
 
 ```typescript
 // TODO show basic group usage
@@ -25,12 +25,16 @@ Add construct to group endpoints into a single callable entity
 
 ##
 
-Move `base` config option into the client
+Move `base` config option into the client.
 
 ```typescript
 // TODO show before/after
 // TODO express router for handling client base
 ```
+
+##
+
+Make `status` and `method` config options primitive types.
 
 # 3.0.3
 
