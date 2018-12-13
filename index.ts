@@ -200,32 +200,28 @@ interface LooseQuery {
     [name: string]: LooseQuery | Callable<any, any>;
 }
 
-type TypedQuery<T extends LooseQuery> = {
-    [N in keyof T]: T[N] extends Callable<infer RQ, infer RS>
-        ? Callable<RQ, RS>
-        : T[N] extends LooseQuery ? TypedQuery<T[N]> : never;
-}
-
 type GroupRequest<Q extends LooseQuery> = {
-    [N in keyof Q]: Q[N] extends LooseQuery
-        ? GroupRequest<Q[N]>
-        : Q[N] extends Callable<infer RQ, infer RS> ? RQ : never;
+    [N in keyof Q]:
+        Q[N] extends LooseQuery ? GroupRequest<Q[N]> :
+        Q[N] extends Callable<infer RQ, infer RS> ? RQ :
+        never;
 }
 
 type GroupResponse<Q extends LooseQuery> = {
-    [N in keyof Q]: Q[N] extends LooseQuery
-        ? GroupResponse<Q[N]>
-        : Q[N] extends Callable<infer RQ, infer RS> ? RS : never;
+    [N in keyof Q]:
+        Q[N] extends LooseQuery ? GroupResponse<Q[N]> :
+        Q[N] extends Callable<infer RQ, infer RS> ? RS :
+        never;
 }
 
-class Group<T extends LooseQuery, Q extends TypedQuery<T>> {
-    private query: Q;
+class Group<T extends LooseQuery> {
+    private query: T;
 
     constructor(q: T) {
         this.query = q as any;
     }
 
-    public call = (request: GroupRequest<Q>): Promise<GroupResponse<Q>> => {
+    public call = (request: GroupRequest<T>): Promise<GroupResponse<T>> => {
         return {} as any;
     };
 }
@@ -235,12 +231,13 @@ const client = new Client();
 const endpoint = client.Endpoint<string, number>("/test");
 
 const query = new Group({
-    test: client.Endpoint("/test"),
+    test: endpoint,
+    tes: {},
 });
 
 const fn = async () => {
-    const a = await query.call({test: 0});
-    a.test
+    const a = await query.call({test: "", tes: {}});
+    const b: number = a.test;
 };
 
 
