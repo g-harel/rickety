@@ -2,12 +2,13 @@
 
 TODO
 - update readme/changelog for v4
+- async polyfill in each file?
+- reduce qty of exported things
+- group
+    - make easier to use Request<Group> from outside
 - client
     - add middleware (independent of link for tests)
-    - move base to client
-    - add timeout
 - endpoint
-    - add timeout multiplier
     - string response handling (no parse)
 - link
     - move to sub-packages

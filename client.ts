@@ -1,5 +1,4 @@
-import Endpoint from "./endpoint";
-import {Status, LooseConfig} from ".";
+import {Status} from ".";
 
 export interface LinkRequest {
     method: string;
@@ -31,18 +30,30 @@ const defaultLink: Link = async (request) => {
 };
 
 export default class Client {
-    /** @internal */
     // Link is invoked with an object representing an http
     // request. Its only responsibility is to return a similarly
     // structured response object.
-    public link: Link = defaultLink;
+    public readonly link: Link = defaultLink;
 
-    public use = (link: Link): Client => {
-        this.link = link;
-        return this;
+    // The base should contain everything in the url before
+    // the path. Default value of "" will send requests to the
+    // same domain.
+    public readonly base: string;
+
+    public constructor(base: string = "") {
+        this.base = base;
+    }
+
+    /** @internal */
+    public send: Link = async (request) => {
+        request = Object.assign({}, request, {
+            url: this.base + request.url,
+        });
+        return this.link(request);
     };
 
-    public Endpoint = <RQ, RS>(config: LooseConfig): Endpoint<RQ, RS> => {
-        return new Endpoint(this, config);
+    public use = (link: Link): Client => {
+        (this as any).link = link;
+        return this;
     };
 }

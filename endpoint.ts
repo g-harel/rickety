@@ -14,14 +14,12 @@ export type Status = 100 | 101 | 102 | 103 | 200 | 201 | 202 | 203 | 204 | 205 |
 // make it possible to represent an arbitrary endpoint
 // that is not necessarily managed by this package.
 export interface Config {
+    // TODO
+    client: Client;
+
     // HTTP method used when handling and making requests.
     // Defaults to "POST" if not configured.
     method?: Method;
-
-    // The base should contain everything in the url before
-    // the path. Default value of "" will send requests to the
-    // same domain.
-    base?: string;
 
     // URL path at which the handler will be registered and
     // the requests will be sent. This setting is required.
@@ -34,16 +32,6 @@ export interface Config {
     expect?: Status | Status[];
 }
 
-export type LooseConfig = Config | string;
-
-// A stricter version of the Config which demands defined values.
-export interface StrictConfig {
-    method: Method;
-    base: string;
-    path: string;
-    expect: Status[];
-}
-
 // Request handlers contain the server code that transforms
 // typed requests into typed responses. Both express' request
 // and response objects are passed to the function to make it
@@ -53,26 +41,11 @@ export interface RequestHandler<RQ, RS> {
     (data: RQ, req: Request, res: Response): Promise<RS> | RS;
 }
 
-const resolveConfig = (config: LooseConfig): StrictConfig => {
-    // After this block, the input argument can only have
-    // the type of a Config.
-    if (typeof config === "string") {
-        config = {path: config};
-    }
-
-    return {
-        path: config.path || "/",
-        base: config.base || "",
-        method: config.method || "POST",
-        // The expected status is normalized into an array.
-        expect: [].concat(config.expect || (200 as any)) as Status[],
-    };
-};
-
 // Helper to create formatted errors with added information
 // about the endpoint instance.
-const err = (config: StrictConfig, ...messages: any[]) => {
-    const {method, base, path} = config;
+const err = (endpoint: Endpoint<any, any>, ...messages: any[]): Error => {
+    const {method, path} = endpoint;
+    const {base} = endpoint.client;
     messages.unshift(`EndpointError (${method} ${base}${path})`);
     messages = messages.map((message, i) => {
         return " ".repeat(i) + message.toString();
@@ -83,13 +56,17 @@ const err = (config: StrictConfig, ...messages: any[]) => {
 
 // An endpoint contains its configuration as well as the types
 // of the request and response values.
-export default class Endpoint<RQ, RS> implements Callable<RQ, RS> {
-    private config: StrictConfig;
-    private client: Client;
+export default class Endpoint<RQ, RS> implements Config, Callable<RQ, RS> {
+    public readonly client: Client;
+    public readonly method: Method;
+    public readonly path: string;
+    public readonly expect: Status[];
 
-    constructor(client: Client, config: LooseConfig) {
-        this.client = client;
-        this.config = resolveConfig(config);
+    constructor(config: Config) {
+        this.client = config.client;
+        this.method = config.method || "POST";
+        this.path = config.path;
+        this.expect = [].concat(config.expect || (200 as any)) as Status[];
     }
 
     // The call function sends requests to the configured
@@ -102,30 +79,30 @@ export default class Endpoint<RQ, RS> implements Callable<RQ, RS> {
         try {
             body = JSON.stringify(requestData);
         } catch (e) {
-            throw err(this.config, "Could not stringify request data", e);
+            throw err(this, "Could not stringify request data", e);
         }
 
-        const url = `${this.config.base}${this.config.path}`;
-        const method = this.config.method;
+        const url = this.path;
+        const method = this.method;
         const headers = {
             "Content-Type": "application/json",
         };
 
         let res: LinkResponse;
         try {
-            res = await this.client.link({method, url, body, headers});
+            res = await this.client.send({method, url, body, headers});
         } catch (e) {
-            throw err(this.config, "Request sending failed", e);
+            throw err(this, "Request sending failed", e);
         }
-        if ((this.config.expect as any).indexOf(res.status as any) < 0) {
-            throw err(this.config, `Unexpected status: ${res.status}`, res.body);
+        if ((this.expect as any).indexOf(res.status as any) < 0) {
+            throw err(this, `Unexpected status: ${res.status}`, res.body);
         }
 
         let responseData: RS;
         try {
             responseData = JSON.parse(res.body);
         } catch (e) {
-            throw err(this.config, "Could not parse response data", e, res.body);
+            throw err(this, "Could not parse response data", e, res.body);
         }
         return responseData;
     }
@@ -135,7 +112,7 @@ export default class Endpoint<RQ, RS> implements Callable<RQ, RS> {
     public handler(handler: RequestHandler<RQ, RS>): any {
         return async (req: Request, res: Response, next: (err?: any) => void) => {
             // Only requests with the correct method are handled.
-            if (req.method !== this.config.method) {
+            if (req.method !== this.method) {
                 return next();
             }
 
@@ -143,12 +120,8 @@ export default class Endpoint<RQ, RS> implements Callable<RQ, RS> {
             // If the endpoint's base path is also defined,
             // requests with the correct base and path part
             // are also handled.
-            if (req.originalUrl !== this.config.path) {
-                const baseMatch = req.baseUrl === this.config.base;
-                const pathPartMatch = req.path === this.config.path;
-                if (!baseMatch || !pathPartMatch) {
-                    return next();
-                }
+            if (req.originalUrl !== this.path) {
+                return next();
             }
 
             // Handler is not invoked if a different handler
@@ -156,7 +129,7 @@ export default class Endpoint<RQ, RS> implements Callable<RQ, RS> {
             // is considered an error since the handler should
             // have been used.
             if (res.headersSent) {
-                return next(err(this.config, "Response has already been sent."));
+                return next(err(this, "Response has already been sent."));
             }
 
             // Request body is streamed into a string to be parsed.
@@ -172,27 +145,27 @@ export default class Endpoint<RQ, RS> implements Callable<RQ, RS> {
                 requestData = JSON.parse(rawRequestData);
             } catch (e) {
                 const msg = "Could not parse request data";
-                return next(err(this.config, msg, e, rawRequestData));
+                return next(err(this, msg, e, rawRequestData));
             }
 
             let responseData: RS;
             try {
                 responseData = await handler(requestData, req, res);
             } catch (e) {
-                return next(err(this.config, "Handler error", e));
+                return next(err(this, "Handler error", e));
             }
 
             // Although the handler is given access to the express
             // response object, it should not send the data itself.
             if (res.headersSent) {
-                return next(err(this.config, "Response was sent by handler."));
+                return next(err(this, "Response was sent by handler."));
             }
 
             let rawResponseData: string = "";
             try {
                 rawResponseData = JSON.stringify(responseData);
             } catch (e) {
-                return err(this.config, "Could not stringify response data", e);
+                return err(this, "Could not stringify response data", e);
             }
 
             res.status(200);

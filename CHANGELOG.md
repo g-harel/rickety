@@ -15,6 +15,23 @@ Make Endpoints configurable with a Client (instead of globally)
 // TODO show how to Client.use instead of link
 ```
 
+##
+
+Add construct to group endpoints into a single callable entity
+
+```typescript
+// TODO show basic group usage
+```
+
+##
+
+Move `base` config option into the client
+
+```typescript
+// TODO show before/after
+// TODO express router for handling client base
+```
+
 # 3.0.3
 
 Make handler path comparing use `req.originalUrl` instead of `req.path`.

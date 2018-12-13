@@ -5,8 +5,6 @@ export {
     Method,
     Status,
     Config,
-    LooseConfig,
-    StrictConfig,
     RequestHandler,
 } from "./endpoint";
 
