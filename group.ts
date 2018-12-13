@@ -1,4 +1,4 @@
-import Endpoint from "./endpoint";
+import {Endpoint} from "./endpoint";
 
 export interface Callable<RQ, RS> {
     call(requestData: RQ): Promise<RS>;
@@ -61,7 +61,7 @@ const isCallable = (c: any): c is Callable<any, any> => {
     return c instanceof Endpoint || c instanceof EndpointGroup;
 };
 
-export default class EndpointGroup<G extends Group>
+export class EndpointGroup<G extends Group>
     implements Callable<GroupRequest<G>, GroupResponse<G>> {
     private group: G;
 

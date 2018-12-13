@@ -27,7 +27,7 @@ const defaultLink: Link = async (request) => {
     return {body, status};
 };
 
-export default class Client {
+export class Client {
     // Link is invoked with an object representing an http
     // request. Its only responsibility is to return a similarly
     // structured response object.
