@@ -1,7 +1,8 @@
 import {Request, Response} from "express";
 
+import {Callable} from "./callable";
 import {Client} from "./client";
-import {Callable, LinkResponse} from ".";
+import {LinkResponse} from ".";
 
 // Config object influences the behavior of both the
 // request making and handling logic. It is designed to
@@ -50,13 +51,14 @@ const err = (endpoint: Endpoint<any, any>, ...messages: any[]): Error => {
 
 // An endpoint contains its configuration as well as the types
 // of the request and response values.
-export class Endpoint<RQ, RS> implements Config, Callable<RQ, RS> {
+export class Endpoint<RQ, RS> extends Callable<RQ, RS> implements Config {
     public readonly client: Client;
     public readonly method: string;
     public readonly path: string;
     public readonly expect: number[];
 
     constructor(config: Config) {
+        super();
         this.client = config.client;
         this.method = config.method || "POST";
         this.path = config.path;

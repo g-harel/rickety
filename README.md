@@ -4,12 +4,14 @@ TODO
 - update readme/changelog for v4
 - async polyfill in each file?
 - reduce qty of exported things
+- replace call (has meaning in js) with other verb
 - group
     - make easier to use Request<Group> from outside
 - client
     - add middleware (independent of link for tests)
 - endpoint
     - string response handling (no parse)
+    - type checking functions in config
 - link
     - move to sub-packages
 

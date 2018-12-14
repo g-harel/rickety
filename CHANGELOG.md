@@ -36,6 +36,18 @@ Move `base` config option into the client.
 
 Make `status` and `method` config options primitive types.
 
+```typescript
+// TODO show before/after
+```
+
+##
+
+Make request and response types available on endpoints.
+
+```typescript
+// TODO sample
+```
+
 # 3.0.3
 
 Make handler path comparing use `req.originalUrl` instead of `req.path`.
