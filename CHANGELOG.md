@@ -48,6 +48,22 @@ Make request and response types available on endpoints.
 // TODO sample
 ```
 
+##
+
+Move links into own directory.
+
+```typescript
+// TODO show before/after
+```
+
+##
+
+Removed noisy exports from default entry.
+
+```typescript
+// TODO sample of looking into ./link and ./source/endpoint
+```
+
 # 3.0.3
 
 Make handler path comparing use `req.originalUrl` instead of `req.path`.

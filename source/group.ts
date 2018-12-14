@@ -1,22 +1,22 @@
 import {Callable} from "./callable";
 
-export interface Group {
-    [name: string]: Group | Callable<any, any>;
+export interface GroupTemplate {
+    [name: string]: GroupTemplate | Callable<any, any>;
 }
 
-type GroupRequest<G extends Group> = {
-    [N in keyof G]: G[N] extends Group
+export type GroupRequest<G extends GroupTemplate> = {
+    [N in keyof G]: G[N] extends GroupTemplate
         ? GroupRequest<G[N]>
         : G[N] extends Callable<infer RQ, infer _> ? RQ : never
 };
 
-type GroupResponse<G extends Group> = {
-    [N in keyof G]: G[N] extends Group
+export type GroupResponse<G extends GroupTemplate> = {
+    [N in keyof G]: G[N] extends GroupTemplate
         ? GroupResponse<G[N]>
         : G[N] extends Callable<infer _, infer RS> ? RS : never
 };
 
-const read = (obj: any, addr: string[]): any => {
+export const read = (obj: any, addr: string[]): any => {
     let current = obj;
     for (let i = 0; i < addr.length; i++) {
         const key = addr[i];
@@ -33,7 +33,7 @@ const read = (obj: any, addr: string[]): any => {
     }
 };
 
-const write = (obj: any, addr: string[], value: any) => {
+export const write = (obj: any, addr: string[], value: any) => {
     let current = obj;
     for (let i = 0; i < addr.length; i++) {
         const key = addr[i];
@@ -50,7 +50,7 @@ const write = (obj: any, addr: string[], value: any) => {
     }
 };
 
-export class EndpointGroup<G extends Group> extends Callable<
+export class Group<G extends GroupTemplate> extends Callable<
     GroupRequest<G>,
     GroupResponse<G>
 > {

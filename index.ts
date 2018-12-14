@@ -1,3 +1,3 @@
-export {Client, LinkRequest, LinkResponse, Link} from "./client";
-export {Endpoint, Config, RequestHandler} from "./endpoint";
-export {EndpointGroup, Group} from "./group";
+export {Client} from "./source/client";
+export {Endpoint} from "./source/endpoint";
+export {Group} from "./source/group";

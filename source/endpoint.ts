@@ -1,15 +1,16 @@
 import {Request, Response} from "express";
 
+import {Client} from "..";
+import {LinkResponse} from "../link";
 import {Callable} from "./callable";
-import {Client} from "./client";
-import {LinkResponse} from ".";
 
 // Config object influences the behavior of both the
 // request making and handling logic. It is designed to
 // make it possible to represent an arbitrary endpoint
 // that is not necessarily managed by this package.
 export interface Config {
-    // TODO
+    // Client is used to send the requests and can be shared
+    // by multiple endpoints.
     client: Client;
 
     // HTTP method used when handling and making requests.
@@ -32,13 +33,13 @@ export interface Config {
 // and response objects are passed to the function to make it
 // possible to implement custom behavior like accessing and
 // writing headers when necessary.
-export interface RequestHandler<RQ, RS> {
+export interface Handler<RQ, RS> {
     (data: RQ, req: Request, res: Response): Promise<RS> | RS;
 }
 
 // Helper to create formatted errors with added information
 // about the endpoint instance.
-const err = (endpoint: Endpoint<any, any>, ...messages: any[]): Error => {
+export const err = (endpoint: Endpoint<any, any>, ...messages: any[]): Error => {
     const {method, path} = endpoint;
     const {base} = endpoint.client;
     messages.unshift(`EndpointError (${method} ${base}${path})`);
@@ -105,7 +106,7 @@ export class Endpoint<RQ, RS> extends Callable<RQ, RS> implements Config {
 
     // Handler generator returning an express request handler
     // from a config and a request handling function.
-    public handler(handler: RequestHandler<RQ, RS>): any {
+    public handler(handler: Handler<RQ, RS>): any {
         return async (req: Request, res: Response, next: (err?: any) => void) => {
             // Only requests with the correct method are handled.
             if (req.method !== this.method) {

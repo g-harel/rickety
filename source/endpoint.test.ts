@@ -1,61 +1,11 @@
 import express from "express";
 import supertest from "supertest";
 
-import {Client, Endpoint, EndpointGroup, LinkRequest, Config, Link} from ".";
-import {link as links} from "./link";
+import {Client, Endpoint} from "..";
+import {LinkRequest} from "../link";
+import {Config} from "./endpoint";
 
-test("group", async () => {
-    const client = new Client();
-
-    client.use(async (request: LinkRequest) => {
-        return {
-            status: 200,
-            body: `{"response": ${request.body}}`,
-        };
-    });
-
-    const endpoint = new Endpoint<string, {response: string}>({
-        client,
-        path: "/test",
-    });
-
-    const query = new EndpointGroup({
-        a: endpoint,
-        b: {
-            c: endpoint,
-            d: {
-                e: endpoint,
-                f: endpoint,
-            },
-        },
-        tes: {},
-    });
-
-    const query2 = new EndpointGroup({
-        nested: query,
-    });
-
-    const fn = async () => {
-        const a = await query2.call({
-            nested: {
-                a: "a-data",
-                b: {
-                    c: "c-data",
-                    d: {
-                        e: "e-data",
-                        f: "f-data",
-                    },
-                },
-                tes: {},
-            },
-        });
-        console.log(JSON.stringify(a, null, 2));
-    };
-
-    await fn();
-});
-
-describe("Endpoint.call", () => {
+describe("call", () => {
     let link: jest.SpyInstance;
     let lastSent: LinkRequest;
     let client: Client;
@@ -105,7 +55,7 @@ describe("Endpoint.call", () => {
     });
 });
 
-describe("Endpoint.handler", () => {
+describe("handler", () => {
     let app: express.Express;
     let client: Client;
 
@@ -232,92 +182,5 @@ describe("Endpoint.handler", () => {
             .post(path)
             .send("{}");
         expect(test.mock.calls[0][0].toString()).toMatch(error.toString());
-    });
-});
-
-describe("client.send", () => {
-    it("should concatenate the base and the path to form the url", async () => {
-        const client = new Client("/base123");
-        const request: LinkRequest = {
-            method: "GET",
-            headers: {},
-            body: "{}",
-            url: "/path123",
-        };
-
-        client.use(async (req) => {
-            expect(req.url).toBe(client.base + request.url);
-            return {body: "{}", status: 200};
-        });
-        await client.send(request);
-    });
-});
-
-describe("link.express", () => {
-    let app: express.Express;
-    let client: Client;
-    let endpoint: Endpoint<any, any>;
-
-    beforeEach(() => {
-        app = express();
-        client = new Client();
-        client.use(links.express(app));
-        endpoint = new Endpoint({client, path: "/" + Math.random()});
-    });
-
-    it("should send requests to the handler", async () => {
-        const test = jest.fn();
-
-        app.use(endpoint.handler(test));
-        await endpoint.call({});
-
-        expect(test).toHaveBeenCalled();
-    });
-
-    it("should pass along request headers", async () => {
-        const headerName = "Test-Name";
-        const headerValue = "12345";
-        const test = jest.fn();
-
-        app.use(
-            endpoint.handler((_, req) => {
-                test(req.header(headerName));
-                return {};
-            }),
-        );
-
-        const sender: Link = async (request) => {
-            request.headers[headerName] = headerValue;
-            return links.express(app)(request);
-        };
-        client.use(sender);
-
-        await endpoint.call({});
-
-        expect(test).toHaveBeenCalledWith(headerValue);
-    });
-
-    it("should pass along the request body", async () => {
-        const payload = {test: true, arr: [0, ""]};
-        const test = jest.fn();
-
-        app.use(
-            endpoint.handler((data) => {
-                test(data);
-                return {};
-            }),
-        );
-        await endpoint.call(payload);
-
-        expect(test).toHaveBeenCalledWith(payload);
-    });
-
-    it("should return the response data", async () => {
-        const payload = {test: true, arr: [0, ""]};
-
-        app.use(endpoint.handler(() => payload));
-        const res = await endpoint.call({});
-
-        expect(res).toEqual(payload);
     });
 });
