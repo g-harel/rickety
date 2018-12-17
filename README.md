@@ -3,9 +3,14 @@
 TODO
 - update readme/changelog for v4
 - async polyfill in each file?
-- replace call (has meaning in js) with other verb
+- callable
+    - replace call (has meaning in js) with other verb
+    - replace $Request with $req cause it's less typing
+- link
+    - rename (overloaded with url link) maybe steal Client?
+    - add for request, XHR?, axios, got, superagent
 - client
-    - add middleware (independent of link for tests)
+    - remove entirely, use links (renamed to client)
 - endpoint
     - string response handling (no parse)
     - type checking functions in config

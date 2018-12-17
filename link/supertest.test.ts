@@ -2,7 +2,7 @@ import express from "express";
 
 import {Link} from ".";
 import {Client, Endpoint} from "..";
-import {expressLink} from "./express";
+import {supertestLink} from "./supertest";
 
 let app: express.Express;
 let client: Client;
@@ -11,7 +11,7 @@ let endpoint: Endpoint<any, any>;
 beforeEach(() => {
     app = express();
     client = new Client();
-    client.use(expressLink(app));
+    client.use(supertestLink(app));
     endpoint = new Endpoint({client, path: "/" + Math.random()});
 });
 
@@ -38,7 +38,7 @@ it("should pass along request headers", async () => {
 
     const sender: Link = async (request) => {
         request.headers[headerName] = headerValue;
-        return expressLink(app)(request);
+        return supertestLink(app)(request);
     };
     client.use(sender);
 

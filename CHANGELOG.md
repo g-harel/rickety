@@ -50,7 +50,7 @@ Make request and response types available on endpoints.
 
 ##
 
-Move links into own directory.
+Move links into own directory (+ rename express to supertest).
 
 ```typescript
 // TODO show before/after
