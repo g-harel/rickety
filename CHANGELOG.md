@@ -64,6 +64,14 @@ Removed noisy exports from default entry.
 // TODO sample of looking into ./link and ./source/endpoint
 ```
 
+##
+
+Make endpoint (and group/callable) reuqest and response types available as $req and $res
+
+```typescript
+// TODO example with endpoint and group
+```
+
 # 3.0.3
 
 Make handler path comparing use `req.originalUrl` instead of `req.path`.

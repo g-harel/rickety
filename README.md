@@ -5,7 +5,6 @@ TODO
 - async polyfill in each file?
 - callable
     - replace call (has meaning in js) with other verb
-    - replace $Request with $req cause it's less typing
 - link
     - rename (overloaded with url link) maybe steal Client?
     - add for request, XHR?, axios, got, superagent

@@ -8,22 +8,22 @@ class ConcreteCallable<RQ, RS> extends Callable<RQ, RS> {
 
 it("should expose the request type", () => {
     const c = new ConcreteCallable<number, string>();
-    let n: typeof c.$Request = 0;
+    let n: typeof c.$req = 0;
     n = n;
 });
 
 it("should expose the response type", () => {
     const c = new ConcreteCallable<number, string>();
-    let s: typeof c.$Response = "";
+    let s: typeof c.$res = "";
     s = s;
 });
 
 it("should not allow access to $Request member", () => {
     const c = new ConcreteCallable();
-    expect(() => c.$Request).toThrow(/rickety/);
+    expect(() => c.$req).toThrow(/rickety/);
 });
 
 it("should not allow access to $Response member", () => {
     const c = new ConcreteCallable();
-    expect(() => c.$Response).toThrow(/rickety/);
+    expect(() => c.$res).toThrow(/rickety/);
 });
