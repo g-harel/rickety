@@ -5,11 +5,8 @@ TODO
 - async polyfill in each file?
 - callable
     - replace call (has meaning in js) with other verb
-- link
-    - rename (overloaded with url link) maybe steal Client?
-    - add for request, XHR?, axios, got, superagent
 - client
-    - remove entirely, use links (renamed to client)
+    - add for request, XHR?, axios, got, superagent
 - endpoint
     - string response handling (no parse)
     - type checking functions in config

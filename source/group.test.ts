@@ -1,16 +1,16 @@
-import {Client, Endpoint, Group} from "..";
-import {LinkRequest} from "../link";
+import {Endpoint, Group} from "..";
+import {Client} from "./client";
 
 // TODO
 test("group", async () => {
-    const client = new Client();
-
-    client.use(async (request: LinkRequest) => {
-        return {
-            status: 200,
-            body: `{"response": ${request.body}}`,
-        };
-    });
+    const client: Client = {
+        send: async (request) => {
+            return {
+                status: 200,
+                body: `{"response": ${request.body}}`,
+            };
+        },
+    };
 
     const endpoint = new Endpoint<string, {response: string}>({
         client,

@@ -1,8 +1,8 @@
 import express from "express";
 
-import {Link} from ".";
-import {Client, Endpoint} from "..";
-import {supertestLink} from "./supertest";
+import {Client} from "../source/client";
+import {Endpoint} from "..";
+import {SupertestClient} from "./supertest";
 
 let app: express.Express;
 let client: Client;
@@ -10,8 +10,7 @@ let endpoint: Endpoint<any, any>;
 
 beforeEach(() => {
     app = express();
-    client = new Client();
-    client.use(supertestLink(app));
+    client = new SupertestClient(app);
     endpoint = new Endpoint({client, path: "/" + Math.random()});
 });
 
@@ -36,11 +35,11 @@ it("should pass along request headers", async () => {
         }),
     );
 
-    const sender: Link = async (request) => {
+    const spy = jest.spyOn(client, "send");
+    spy.mockImplementation((request) => {
         request.headers[headerName] = headerValue;
-        return supertestLink(app)(request);
-    };
-    client.use(sender);
+        return new SupertestClient(app).send(request);
+    });
 
     await endpoint.call({});
 

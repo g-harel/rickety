@@ -1,7 +1,7 @@
 import {Request, Response} from "express";
 
 import {Client} from "..";
-import {LinkResponse} from "../link";
+import {ClientResponse} from "./client";
 import {Callable} from "./callable";
 
 // Config object influences the behavior of both the
@@ -41,8 +41,7 @@ export interface Handler<RQ, RS> {
 // about the endpoint instance.
 export const err = (endpoint: Endpoint<any, any>, ...messages: any[]): Error => {
     const {method, path} = endpoint;
-    const {base} = endpoint.client;
-    messages.unshift(`EndpointError (${method} ${base}${path})`);
+    messages.unshift(`EndpointError (${method} ${path})`);
     messages = messages.map((message, i) => {
         return " ".repeat(i) + message.toString();
     });
@@ -85,7 +84,7 @@ export class Endpoint<RQ, RS> extends Callable<RQ, RS> implements Config {
             "Content-Type": "application/json",
         };
 
-        let res: LinkResponse;
+        let res: ClientResponse;
         try {
             res = await this.client.send({method, url, body, headers});
         } catch (e) {

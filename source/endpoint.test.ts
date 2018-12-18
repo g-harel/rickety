@@ -2,21 +2,21 @@ import express from "express";
 import supertest from "supertest";
 
 import {Client, Endpoint} from "..";
-import {LinkRequest} from "../link";
+import {ClientRequest} from "./client";
 import {Config} from "./endpoint";
 
 describe("call", () => {
-    let link: jest.SpyInstance;
-    let lastSent: LinkRequest;
+    let spy: jest.SpyInstance;
+    let lastSent: ClientRequest;
     let client: Client;
 
     beforeEach(() => {
         client = new Client();
-        link = jest.fn(async (request) => {
+        spy = jest.spyOn(client, "send");
+        spy.mockImplementation(async (request) => {
             lastSent = request;
             return {status: 200, body: "{}"};
         });
-        client.use(link as any);
     });
 
     it("should pass along request data to the link", async () => {
@@ -46,7 +46,7 @@ describe("call", () => {
             path: "/path123",
             expect: [301, 302],
         };
-        link.mockReturnValueOnce({
+        spy.mockReturnValueOnce({
             status: 400,
             body: "{}",
         });

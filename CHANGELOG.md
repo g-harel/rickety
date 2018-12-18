@@ -25,7 +25,7 @@ Add construct to group endpoints into a single callable entity.
 
 ##
 
-Move `base` config option into the client.
+Remove `base` option, should extend your client.
 
 ```typescript
 // TODO show before/after
@@ -50,7 +50,7 @@ Make request and response types available on endpoints.
 
 ##
 
-Move links into own directory (+ rename express to supertest).
+Move + rename links to client (+ rename express to supertest).
 
 ```typescript
 // TODO show before/after
@@ -66,7 +66,7 @@ Removed noisy exports from default entry.
 
 ##
 
-Make endpoint (and group/callable) reuqest and response types available as $req and $res
+Make endpoint (and group/callable) request and response types available as $req and $res
 
 ```typescript
 // TODO example with endpoint and group
