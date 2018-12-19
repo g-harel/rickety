@@ -4,16 +4,20 @@ export interface GroupTemplate {
     [name: string]: GroupTemplate | Callable<any, any>;
 }
 
+// prettier-ignore
 export type GroupRequest<G extends GroupTemplate> = {
-    [N in keyof G]: G[N] extends GroupTemplate
-        ? GroupRequest<G[N]>
-        : G[N] extends Callable<infer RQ, infer _> ? RQ : never
+    [N in keyof G]:
+        G[N] extends GroupTemplate ? GroupRequest<G[N]> :
+        G[N] extends Callable<infer RQ, infer _> ? RQ :
+        never
 };
 
+// prettier-ignore
 export type GroupResponse<G extends GroupTemplate> = {
-    [N in keyof G]: G[N] extends GroupTemplate
-        ? GroupResponse<G[N]>
-        : G[N] extends Callable<infer _, infer RS> ? RS : never
+    [N in keyof G]:
+        G[N] extends GroupTemplate ? GroupResponse<G[N]> :
+        G[N] extends Callable<infer _, infer RS> ? RS :
+        never
 };
 
 export const read = (obj: any, addr: string[]): any => {

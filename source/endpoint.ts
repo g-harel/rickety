@@ -26,6 +26,14 @@ export interface Config {
     // used for making requests and has no influence on the
     // handler (which will return `200` by default).
     expect?: number | number[];
+
+    // Type checking function run before and after
+    // serializing requests in both client and server.
+    isRequest?: (req: any) => boolean;
+
+    // Type checking function run before and after
+    // serializing responses in both client and server.
+    isResponse?: (res: any) => boolean;
 }
 
 // Request handlers contain the server code that transforms
@@ -56,6 +64,8 @@ export class Endpoint<RQ, RS> extends Callable<RQ, RS> implements Config {
     public readonly method: string;
     public readonly path: string;
     public readonly expect: number[];
+    public readonly isRequest: (req: any) => boolean;
+    public readonly isResponse: (res: any) => boolean;
 
     constructor(config: Config) {
         super();
@@ -63,6 +73,8 @@ export class Endpoint<RQ, RS> extends Callable<RQ, RS> implements Config {
         this.method = config.method || "POST";
         this.path = config.path;
         this.expect = [].concat((config.expect as any) || 200);
+        this.isRequest = config.isRequest || ((() => true) as any);
+        this.isResponse = config.isResponse || ((() => true) as any);
     }
 
     // The call function sends requests to the configured
@@ -71,6 +83,10 @@ export class Endpoint<RQ, RS> extends Callable<RQ, RS> implements Config {
     // is an issue with the request process or if the status
     // is unexpected.
     public async call(requestData: RQ): Promise<RS> {
+        if (!this.isRequest(requestData)) {
+            throw err(this, "Request type check failed", requestData);
+        }
+
         let body: string;
         try {
             body = JSON.stringify(requestData);
@@ -100,6 +116,11 @@ export class Endpoint<RQ, RS> extends Callable<RQ, RS> implements Config {
         } catch (e) {
             throw err(this, "Could not parse response data", e, res.body);
         }
+
+        if (!this.isResponse(responseData)) {
+            throw err(this, "Response type check failed", responseData);
+        }
+
         return responseData;
     }
 
@@ -144,11 +165,19 @@ export class Endpoint<RQ, RS> extends Callable<RQ, RS> implements Config {
                 return next(err(this, msg, e, rawRequestData));
             }
 
+            if (!this.isRequest(requestData)) {
+                throw err(this, "Request type check failed", requestData);
+            }
+
             let responseData: RS;
             try {
                 responseData = await handler(requestData, req, res);
             } catch (e) {
                 return next(err(this, "Handler error", e));
+            }
+
+            if (!this.isResponse(responseData)) {
+                throw err(this, "Response type check failed", responseData);
             }
 
             // Although the handler is given access to the express

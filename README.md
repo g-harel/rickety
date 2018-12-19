@@ -9,7 +9,6 @@ TODO
     - add for request, XHR?, axios, got, superagent
 - endpoint
     - string response handling (no parse)
-    - type checking functions in config
 
  -->
 
