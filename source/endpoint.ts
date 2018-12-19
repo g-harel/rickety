@@ -166,7 +166,7 @@ export class Endpoint<RQ, RS> extends Callable<RQ, RS> implements Config {
             }
 
             if (!this.isRequest(requestData)) {
-                throw err(this, "Request type check failed", requestData);
+                return next(err(this, "Request type check failed", requestData));
             }
 
             let responseData: RS;
@@ -177,7 +177,7 @@ export class Endpoint<RQ, RS> extends Callable<RQ, RS> implements Config {
             }
 
             if (!this.isResponse(responseData)) {
-                throw err(this, "Response type check failed", responseData);
+                return next(err(this, "Response type check failed", responseData));
             }
 
             // Although the handler is given access to the express

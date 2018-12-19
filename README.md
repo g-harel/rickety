@@ -3,8 +3,10 @@
 TODO
 - update readme/changelog for v4
 - async polyfill in each file?
+- test all the things
+- comment weird parts on all things
 - callable
-    - replace call (has meaning in js) with other verb
+    - try to replace call (has meaning in js) with other verb (do, send, exec, invoke)
 - client
     - add for request, XHR?, axios, got, superagent
 - endpoint

@@ -53,6 +53,36 @@ describe("call", () => {
         const endpoint = new Endpoint(config);
         await expect(endpoint.call({})).rejects.toThrow(/status.*400/);
     });
+
+    it("should throw an error if the request has the wrong type", async () => {
+        const test = jest.fn(() => false);
+        const config: Config = {
+            client,
+            path: "/path123",
+            isRequest: test,
+        };
+        const endpoint = new Endpoint(config);
+        const request = {test: true};
+        await expect(endpoint.call(request)).rejects.toThrow(/request type check/i);
+        expect(test).toHaveBeenCalledWith(request);
+    });
+
+    it("should throw an error if the response has the wrong type", async () => {
+        const test = jest.fn(() => false);
+        const config: Config = {
+            client,
+            path: "/path123",
+            isResponse: test,
+        };
+        const endpoint = new Endpoint(config);
+        const response = {test: true};
+        spy.mockReturnValueOnce({
+            status: 200,
+            body: JSON.stringify(response),
+        });
+        await expect(endpoint.call({})).rejects.toThrow(/response type check/i);
+        expect(test).toHaveBeenCalledWith(response);
+    });
 });
 
 describe("handler", () => {
@@ -182,5 +212,46 @@ describe("handler", () => {
             .post(path)
             .send("{}");
         expect(test.mock.calls[0][0].toString()).toMatch(error.toString());
+    });
+
+    it("should throw an error if the request has the wrong type", async () => {
+        const path = "/path";
+        const test = jest.fn(() => false);
+        const request = {test: true};
+        const endpoint = new Endpoint({
+            client,
+            path,
+            isRequest: test,
+        });
+
+        app.use(endpoint.handler(() => null as any));
+        const res = await supertest(app)
+            .post(path)
+            .send(JSON.stringify(request));
+
+        expect(res.status).toBe(500);
+        expect(res.text).toMatch(/request type check/i);
+        expect(test).toHaveBeenCalledWith(request);
+    });
+
+    it("should throw an error if the response has the wrong type", async () => {
+        const path = "/path";
+        const test = jest.fn(() => false);
+        const response = {test: true};
+        const endpoint = new Endpoint({
+            client,
+            path,
+            isResponse: test,
+        });
+
+        app.use(endpoint.handler(() => response));
+
+        const res = await supertest(app)
+            .post(path)
+            .send("{}");
+
+        expect(res.status).toBe(500);
+        expect(res.text).toMatch(/response type check/i);
+        expect(test).toHaveBeenCalledWith(response);
     });
 });
