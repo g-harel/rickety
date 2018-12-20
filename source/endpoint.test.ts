@@ -2,7 +2,7 @@ import express from "express";
 import supertest from "supertest";
 
 import {Client, Endpoint} from "..";
-import {ClientRequest} from "./client";
+import {ClientRequest} from "../client";
 import {Config} from "./endpoint";
 
 describe("call", () => {

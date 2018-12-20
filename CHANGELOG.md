@@ -72,6 +72,14 @@ Make endpoint (and group/callable) request and response types available as $req 
 // TODO example with endpoint and group
 ```
 
+##
+
+Add config option to make JSON marshalling/un-marshalling `strict`.
+
+```typescript
+// TODO example of raw server response treated as string
+```
+
 # 3.0.3
 
 Make handler path comparing use `req.originalUrl` instead of `req.path`.

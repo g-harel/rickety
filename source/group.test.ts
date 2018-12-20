@@ -1,5 +1,5 @@
 import {Endpoint, Group} from "..";
-import {Client} from "./client";
+import {Client} from "../client";
 
 // TODO
 test("group", async () => {
@@ -7,7 +7,7 @@ test("group", async () => {
         send: async (request) => {
             return {
                 status: 200,
-                body: `{"response": ${request.body}}`,
+                body: `{"response": "${request.body}"}`,
             };
         },
     };

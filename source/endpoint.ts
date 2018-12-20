@@ -1,7 +1,7 @@
 import {Request, Response} from "express";
 
 import {Client} from "..";
-import {ClientResponse} from "./client";
+import {ClientResponse} from "../client";
 import {Callable} from "./callable";
 
 // Config object influences the behavior of both the
@@ -27,13 +27,20 @@ export interface Config {
     // handler (which will return `200` by default).
     expect?: number | number[];
 
-    // Type checking function run before and after
-    // serializing requests in both client and server.
+    // Type checking functions run before and after
+    // serializing the objects in both client and server.
+    // By default any value will be considered correct.
     isRequest?: (req: any) => boolean;
-
-    // Type checking function run before and after
-    // serializing responses in both client and server.
     isResponse?: (res: any) => boolean;
+
+    // Flag to enable strict JSON marshalling/un-marshalling.
+    // By default, "raw" strings are detected and handled
+    // as non-JSON. In strict mode, this would throw a parsing
+    // error. The issue is relevant if a server is returning
+    // a plain message `str`. This is not valid JSON and cannot
+    // be parsed without extra steps. The correct format for
+    // a JSON string has double quotes `"str"`.
+    strict?: boolean;
 }
 
 // Request handlers contain the server code that transforms
@@ -57,6 +64,38 @@ export const err = (endpoint: Endpoint<any, any>, ...messages: any[]): Error => 
     return e;
 };
 
+// JSON parsing helper which tries a bit harder than the
+// default parsing to produce a usable value.
+export const parse = (str: string, strict: boolean = false): any => {
+    try {
+        return JSON.parse(str);
+    } catch (e) {
+        // Strict parsing will not attempt to recover from
+        // an error.
+        if (strict) {
+            throw e;
+        }
+
+        // Only throw error if input's first non-space char
+        // is highly likely to be malformed JSON.
+        const firstChar = str.trimLeft()[0];
+        if (firstChar === "{" || firstChar === "[") {
+            throw e;
+        }
+
+        return str;
+    }
+};
+
+// JSON serialization helper that doesn't put quotes around
+// top level strings (unless in strict marshalling mode).
+export const stringify = (obj: any, strict: boolean = false): string => {
+    if (typeof obj === "string" && !strict) {
+        return obj;
+    }
+    return JSON.stringify(obj);
+}
+
 // An endpoint contains its configuration as well as the types
 // of the request and response values.
 export class Endpoint<RQ, RS> extends Callable<RQ, RS> implements Config {
@@ -66,6 +105,7 @@ export class Endpoint<RQ, RS> extends Callable<RQ, RS> implements Config {
     public readonly expect: number[];
     public readonly isRequest: (req: any) => boolean;
     public readonly isResponse: (res: any) => boolean;
+    public readonly strict: boolean;
 
     constructor(config: Config) {
         super();
@@ -75,6 +115,7 @@ export class Endpoint<RQ, RS> extends Callable<RQ, RS> implements Config {
         this.expect = [].concat((config.expect as any) || 200);
         this.isRequest = config.isRequest || ((() => true) as any);
         this.isResponse = config.isResponse || ((() => true) as any);
+        this.strict = !!config.strict;
     }
 
     // The call function sends requests to the configured
@@ -89,7 +130,7 @@ export class Endpoint<RQ, RS> extends Callable<RQ, RS> implements Config {
 
         let body: string;
         try {
-            body = JSON.stringify(requestData);
+            body = stringify(requestData, this.strict);
         } catch (e) {
             throw err(this, "Could not stringify request data", e);
         }
@@ -112,7 +153,7 @@ export class Endpoint<RQ, RS> extends Callable<RQ, RS> implements Config {
 
         let responseData: RS;
         try {
-            responseData = JSON.parse(res.body);
+            responseData = parse(res.body, this.strict);
         } catch (e) {
             throw err(this, "Could not parse response data", e, res.body);
         }
@@ -159,7 +200,7 @@ export class Endpoint<RQ, RS> extends Callable<RQ, RS> implements Config {
 
             let requestData: RQ;
             try {
-                requestData = JSON.parse(rawRequestData);
+                requestData = parse(rawRequestData, this.strict);
             } catch (e) {
                 const msg = "Could not parse request data";
                 return next(err(this, msg, e, rawRequestData));
@@ -188,7 +229,7 @@ export class Endpoint<RQ, RS> extends Callable<RQ, RS> implements Config {
 
             let rawResponseData: string = "";
             try {
-                rawResponseData = JSON.stringify(responseData);
+                rawResponseData = stringify(responseData, this.strict);
             } catch (e) {
                 return err(this, "Could not stringify response data", e);
             }

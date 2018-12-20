@@ -1,6 +1,6 @@
 import supertest from "supertest";
 
-import {Client, ClientRequest, ClientResponse} from "../source/client";
+import {Client, ClientRequest, ClientResponse} from ".";
 
 // Supertest link uses the "supertest" package to directly query the
 // application instead of going through the network. It is intended

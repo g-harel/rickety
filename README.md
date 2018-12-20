@@ -9,8 +9,6 @@ TODO
     - try to replace call (has meaning in js) with other verb (do, send, exec, invoke)
 - client
     - add for request, XHR?, axios, got, superagent
-- endpoint
-    - string response handling (no parse)
 
  -->
 

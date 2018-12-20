@@ -1,6 +1,6 @@
 import express from "express";
 
-import {Client} from "../source/client";
+import {Client} from ".";
 import {Endpoint} from "..";
 import {SupertestClient} from "./supertest";
 

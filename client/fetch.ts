@@ -1,4 +1,4 @@
-import {Client, ClientRequest} from "../source/client";
+import {Client, ClientRequest} from ".";
 
 export class FetchClient implements Client {
     public async send(request: ClientRequest) {
