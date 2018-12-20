@@ -5,8 +5,6 @@ TODO
 - async polyfill in each file?
 - test all the things
 - comment weird parts on all things
-- callable
-    - try to replace call (has meaning in js) with other verb (do, send, exec, invoke)
 - client
     - add for request, XHR?, axios, got, superagent
 

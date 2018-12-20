@@ -1,4 +1,4 @@
-import {Callable} from "./callable";
+import {Callable} from "../source/callable";
 
 class ConcreteCallable<RQ, RS> extends Callable<RQ, RS> {
     call = async () => {

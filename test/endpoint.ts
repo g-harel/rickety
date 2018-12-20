@@ -3,7 +3,7 @@ import supertest from "supertest";
 
 import {Client, Endpoint} from "..";
 import {ClientRequest} from "../client";
-import {Config} from "./endpoint";
+import {Config} from "../source/endpoint";
 
 describe("call", () => {
     let spy: jest.SpyInstance;

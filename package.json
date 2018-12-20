@@ -50,8 +50,7 @@
       "^.+\\.ts$": "ts-jest"
     },
     "testMatch": [
-      "**/?(*.)test.ts",
-      "!**/example/**/*"
+      "**/test/**"
     ]
   },
   "prettier": {

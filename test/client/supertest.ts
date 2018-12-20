@@ -1,8 +1,8 @@
 import express from "express";
 
-import {Client} from ".";
-import {Endpoint} from "..";
-import {SupertestClient} from "./supertest";
+import {Client} from "../../client";
+import {Endpoint} from "../..";
+import {SupertestClient} from "../../client/supertest";
 
 let app: express.Express;
 let client: Client;

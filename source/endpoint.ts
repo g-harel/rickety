@@ -94,7 +94,7 @@ export const stringify = (obj: any, strict: boolean = false): string => {
         return obj;
     }
     return JSON.stringify(obj);
-}
+};
 
 // An endpoint contains its configuration as well as the types
 // of the request and response values.
