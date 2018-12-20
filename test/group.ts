@@ -153,3 +153,13 @@ it("should support nested groups", async () => {
 
     await expect(group.call(obj)).resolves.toEqual(obj);
 });
+
+it("should correctly handle missing request data", async () => {
+    const group = new Group({
+        test: {
+            test: genMockedEndpoint(),
+        },
+    });
+
+    await expect(group.call({} as any)).rejects.toThrow("request data");
+});

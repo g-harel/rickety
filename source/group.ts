@@ -30,8 +30,12 @@ export const read = (obj: any, addr: string[]): any => {
         }
 
         if (!current[key]) {
-            const prettyObj = JSON.stringify(obj, null, 2);
-            throw new Error(`invalid read address [${addr}] in\n${prettyObj}`);
+            const lines = [
+                `GroupError (invalid request data)`,
+                ` missing value at [${addr}] in`,
+                `  ${JSON.stringify(obj, null, 2)}`,
+            ];
+            throw new Error(lines.join("\n"));
         }
         current = current[key];
     }

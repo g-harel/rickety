@@ -89,10 +89,10 @@ describe("call", () => {
         const body = "test123";
 
         spy.mockResolvedValueOnce({body, status: 200});
-        expect(endpoint.call({})).resolves.toBe(body);
+        await expect(endpoint.call({})).resolves.toBe(body);
 
         spy.mockResolvedValueOnce({body: "{bad}", status: 200});
-        expect(endpoint.call({})).rejects.toThrow("parse");
+        await expect(endpoint.call({})).rejects.toThrow("parse");
     });
 
     it("should handle raw string responses correctly in strict mode", async () => {
@@ -100,7 +100,7 @@ describe("call", () => {
         const body = "test123";
 
         spy.mockResolvedValueOnce({body: `"${body}"`, status: 200});
-        expect(endpoint.call({})).resolves.toBe(body);
+        await expect(endpoint.call({})).resolves.toBe(body);
     });
 
     it("should correctly send raw string requests", async () => {
@@ -110,9 +110,11 @@ describe("call", () => {
         spy.mockClear();
         await endpoint.call(request);
 
-        expect(spy).toHaveBeenCalledWith(expect.objectContaining({
-            body: request,
-        }));
+        await expect(spy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                body: request,
+            }),
+        );
     });
 
     it("should correctly send raw string requests in strict mode", async () => {
@@ -122,9 +124,11 @@ describe("call", () => {
         spy.mockClear();
         await endpoint.call(request);
 
-        expect(spy).toHaveBeenCalledWith(expect.objectContaining({
-            body: `"${request}"`,
-        }));
+        await expect(spy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                body: `"${request}"`,
+            }),
+        );
     });
 });
 
