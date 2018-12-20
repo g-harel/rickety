@@ -12,7 +12,7 @@ Make Endpoints configurable with a Client (instead of globally).
 
 
 ```typescript
-// TODO show how to Client.use instead of link
+// TODO show how to use client
 ```
 
 ##
@@ -61,7 +61,7 @@ Move + rename links to client (+ rename express to supertest).
 Removed noisy exports from default entry.
 
 ```typescript
-// TODO sample of looking into ./link and ./source/endpoint
+// TODO sample of looking into ./client and ./source/endpoint
 ```
 
 ##

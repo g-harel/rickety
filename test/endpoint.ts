@@ -19,7 +19,7 @@ describe("call", () => {
         });
     });
 
-    it("should pass along request data to the link", async () => {
+    it("should pass along request data to the client", async () => {
         const path = "/path123";
         const request = {
             test: true,

@@ -2,7 +2,7 @@ import supertest from "supertest";
 
 import {Client, ClientRequest, ClientResponse} from ".";
 
-// Supertest link uses the "supertest" package to directly query the
+// Supertest client uses the "supertest" package to directly query the
 // application instead of going through the network. It is intended
 // to be used for integration tests.
 export class SupertestClient implements Client {
