@@ -1,7 +1,6 @@
 import {Request, Response} from "express";
 
-import {Client} from "..";
-import {ClientResponse} from "../client";
+import {Client, ClientResponse} from "../client";
 import {Callable} from "./callable";
 
 // Config object influences the behavior of both the

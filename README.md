@@ -3,8 +3,6 @@
 TODO
 - update readme/changelog for v4
 - async polyfill in each file?
-- test all the things
-- comment weird parts on all things
 - client
     - add for request, XHR?, axios, got, superagent
 

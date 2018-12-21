@@ -1,17 +1,17 @@
 import express from "express";
 import supertest from "supertest";
 
-import {Client, Endpoint} from "..";
+import {DefaultClient, Endpoint} from "..";
 import {ClientRequest} from "../client";
 import {Config} from "../source/endpoint";
 
 describe("call", () => {
     let spy: jest.SpyInstance;
     let lastSent: ClientRequest;
-    let client: Client;
+    let client: DefaultClient;
 
     beforeEach(() => {
-        client = new Client();
+        client = new DefaultClient();
         spy = jest.spyOn(client, "send");
         spy.mockImplementation(async (request) => {
             lastSent = request;
@@ -134,11 +134,11 @@ describe("call", () => {
 
 describe("handler", () => {
     let app: express.Express;
-    let client: Client;
+    let client: DefaultClient;
 
     beforeEach(() => {
         app = express();
-        client = new Client();
+        client = new DefaultClient();
     });
 
     it("should run handler when endpoint is called", async () => {

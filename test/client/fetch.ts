@@ -1,4 +1,4 @@
-import {Client as DefaultClient} from "../..";
+import {DefaultClient} from "../..";
 import {FetchClient} from "../../client/fetch";
 import {ClientRequest} from "../../client";
 
