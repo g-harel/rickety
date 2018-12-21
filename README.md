@@ -2,9 +2,7 @@
 
 TODO
 - update readme/changelog for v4
-- async polyfill in each file?
-- client
-    - add for request, XHR?, axios, got, superagent
+- investigate bundling options (avoid async polyfill in each file)
 
  -->
 
