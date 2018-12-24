@@ -31,4 +31,14 @@ export class SupertestClient implements Client {
             });
         });
     }
+
+    // Testing helper to replace a client's functionality
+    // with that of a new SupertestClient.
+    public static override(client: Client, app: Express.Application): Client {
+        const replacement = new SupertestClient(app);
+        (client as any).send = (req: any) => {
+            return replacement.send(req);
+        };
+        return replacement;
+    }
 }

@@ -1,6 +1,7 @@
 {
   "exclude": [
     "example",
+    "test",
     "node_modules"
   ],
   "compilerOptions": {
