@@ -1,9 +1,9 @@
-import {link} from "rickety/link";
+import {SupertestClient} from "rickety/client/supertest";
 
-import {userByID} from "../common/endpoints";
+import {client, userByID} from "../common/endpoints";
 import {app} from "../backend/app";
 
-link.express(app);
+SupertestClient.override(client, app);
 
 test("userByID endpoint returns a user with a correct ID", async () => {
     const id = Math.random();

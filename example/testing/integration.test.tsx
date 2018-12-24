@@ -1,13 +1,14 @@
 import {mount} from "enzyme";
 import React from "react";
-import {link} from "rickety/link";
+import {SupertestClient} from "rickety/client/supertest";
 
 import {App} from "../frontend/app";
 import {app} from "../backend/app";
 import * as database from "../backend/database";
+import {client} from "../common/endpoints";
 import {User} from "../common/types";
 
-link.express(app);
+SupertestClient.override(client, app);
 
 const readUser = jest.spyOn(database, "readUser");
 
