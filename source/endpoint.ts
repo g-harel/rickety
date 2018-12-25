@@ -117,11 +117,10 @@ export class Endpoint<RQ, RS> extends Callable<RQ, RS> implements Config {
         this.strict = !!config.strict;
     }
 
-    // The call function sends requests to the configured
-    // endpoint using the configured sender function.
-    // It returns a promise which may throw errors if there
-    // is an issue with the request process or if the status
-    // is unexpected.
+    // The call function sends requests using the configured
+    // options. It returns a promise which may throw errors if
+    // there is an issue with the request process or if the
+    // status is unexpected.
     public async call(requestData: RQ): Promise<RS> {
         if (!this.isRequest(requestData)) {
             throw err(this, "Request type check failed", requestData);

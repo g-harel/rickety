@@ -15,6 +15,7 @@ TODO
 > minimal typescript rpc framework
 
 * [Strongly typed endpoints](#usage)
+* [Groupable queries](#group)
 * [Simple interface](#api)
 * [Convenient testing](#testing)
 * [No runtime dependencies](/package.json)
@@ -32,19 +33,49 @@ $ npm install rickety
 ## Usage
 
 ``` typescript
-import {Endpoint} from "rickety";
+import {DefaultClient, Endpoint} from "rickety";
 ```
 
 ```typescript
-type Request = {...}
-type Response = {...}
+const myAPI = new DefaultClient();
 
-const endpoint = new Endpoint<Request, Response>("/api/...");
+const userByID = new Endpoint<number, User>({
+    client: myAPI,
+    path: "/api/v1/...",
+});
 ```
 
 ```typescript
 app.use(
-    endpoint.handler(async (request) => {
+    userByID.handler(async (id) => {
+        // ...
+        return user;
+    });
+);
+```
+
+```typescript
+const user = await userByID.call(id);
+```
+
+## Endpoint
+
+```typescript
+// The call function sends requests using the configured
+// options. It returns a promise which may throw errors if
+// there is an issue with the request process or if the
+// status is unexpected.
+const response = await endpoint.call(request);
+```
+
+```typescript
+// Request handlers contain the server code that transforms
+// typed requests into typed responses. Both express' request
+// and response objects are passed to the function to make it
+// possible to implement custom behavior like accessing and
+// writing headers when necessary.
+app.use(
+    endpoint.handler(async (request, req, res) => {
         // ...
         return response;
     });
@@ -52,38 +83,62 @@ app.use(
 ```
 
 ```typescript
-const response = await endpoint.call(request);
+const endpoint = new Endpoint({
+    // Client is used to send the requests and can be shared
+    // by multiple endpoints.
+    client: Client;
+
+    // HTTP method used when handling and making requests.
+    // Defaults to "POST" if not configured.
+    method?: string;
+
+    // URL path at which the handler will be registered and
+    // the requests will be sent. This setting is required.
+    path: string;
+
+    // Expected returned status code(s). By default, anything
+    // but a `200` is considered an error. This value is only
+    // used for making requests and has no influence on the
+    // handler (which will return `200` by default).
+    expect?: number | number[];
+
+    // Type checking functions run before and after
+    // serializing the objects in both client and server.
+    // By default any value will be considered correct.
+    isRequest?: (req: any) => boolean;
+    isResponse?: (res: any) => boolean;
+
+    // Flag to enable strict JSON marshalling/un-marshalling.
+    // By default, "raw" strings are detected and handled
+    // as non-JSON. In strict mode, this would throw a parsing
+    // error. The issue is relevant if a server is returning
+    // a plain message `str`. This is not valid JSON and cannot
+    // be parsed without extra steps. The correct format for
+    // a JSON string has double quotes `"str"`.
+    strict?: boolean;
+})
 ```
 
-## API
+Endpoints expose their configuration through readonly public values which can be accessed from the instance. This will expose the default values if the option was not defined on creation.
 
 ```typescript
-export type Method // HTTP Method (GET, POST, ...)
-export type Status // HTTP Status (200, 404, 500, ...)
-
-export interface Config {
-    method?: Method;             // "POST"
-    base?: string;               // ""
-    path: string;
-    expect?: Status | Status[];  // 200
-}
-
-export interface Headers {
-    [name: string]: string;
-}
-
-export interface RequestHandler<RQ, RS> {
-    (data: RQ, req: express.Request, res: express.Response): Promise<RS> | RS;
-}
-
-export class Endpoint<RQ, RS> {
-    constructor(path: string);
-    constructor(config: Config);
-
-    call(data: RQ, ...headers: Headers[]): Promise<RS>;
-    handler(handler: RequestHandler<RQ, RS>): express.RequestHandler;
-}
+const method = endpoint.method;
 ```
+
+The endpoint's request and response types can also be accessed using `typeof` on two special members. Accessing these by value with produce an error.
+
+```typescript
+type Request = typeof endpoint.$req;
+type Response = typeof endpoint.$res;
+```
+
+## Client
+
+`TODO`
+
+## Group
+
+`TODO`
 
 ## Testing
 
