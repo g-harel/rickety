@@ -60,20 +60,15 @@ const user = await userByID.call(id);
 
 ## Endpoint
 
+An endpoint's call function sends requests using the configured options. It returns a promise which may reject if there is an issue with the request process or if the status is unexpected.
+
 ```typescript
-// The call function sends requests using the configured
-// options. It returns a promise which may throw errors if
-// there is an issue with the request process or if the
-// status is unexpected.
 const response = await endpoint.call(request);
 ```
 
+Request handlers contain the server code that transforms typed requests into typed responses. Both express' request and response objects are passed to the function to make it possible to implement custom behavior like accessing and writing headers when necessary.
+
 ```typescript
-// Request handlers contain the server code that transforms
-// typed requests into typed responses. Both express' request
-// and response objects are passed to the function to make it
-// possible to implement custom behavior like accessing and
-// writing headers when necessary.
 app.use(
     endpoint.handler(async (request, req, res) => {
         // ...
@@ -82,44 +77,7 @@ app.use(
 );
 ```
 
-```typescript
-const endpoint = new Endpoint({
-    // Client is used to send the requests and can be shared
-    // by multiple endpoints.
-    client: Client;
-
-    // HTTP method used when handling and making requests.
-    // Defaults to "POST" if not configured.
-    method?: string;
-
-    // URL path at which the handler will be registered and
-    // the requests will be sent. This setting is required.
-    path: string;
-
-    // Expected returned status code(s). By default, anything
-    // but a `200` is considered an error. This value is only
-    // used for making requests and has no influence on the
-    // handler (which will return `200` by default).
-    expect?: number | number[];
-
-    // Type checking functions run before and after
-    // serializing the objects in both client and server.
-    // By default any value will be considered correct.
-    isRequest?: (req: any) => boolean;
-    isResponse?: (res: any) => boolean;
-
-    // Flag to enable strict JSON marshalling/un-marshalling.
-    // By default, "raw" strings are detected and handled
-    // as non-JSON. In strict mode, this would throw a parsing
-    // error. The issue is relevant if a server is returning
-    // a plain message `str`. This is not valid JSON and cannot
-    // be parsed without extra steps. The correct format for
-    // a JSON string has double quotes `"str"`.
-    strict?: boolean;
-})
-```
-
-Endpoints expose their configuration through readonly public values which can be accessed from the instance. This will expose the default values if the option was not defined on creation.
+Endpoints expose their configuration through readonly public values which can be accessed from the instance. This allows visibility into the default values if the option was not defined on creation.
 
 ```typescript
 const method = endpoint.method;
@@ -132,13 +90,54 @@ type Request = typeof endpoint.$req;
 type Response = typeof endpoint.$res;
 ```
 
+#### Config
+
+```typescript
+const endpoint = new Endpoint({
+    client: Client;
+    method?: string;
+    path: string;
+    expect?: number | number[];
+    isRequest?: (req: any) => boolean;
+    isResponse?: (res: any) => boolean;
+    strict?: boolean;
+});
+```
+
+| | |
+| -- | -- |
+| `client` | Client is used to send the requests and can be shared by multiple endpoints. More info [here](#client). |
+| `method` | HTTP method used when handling and making requests. Defaults to `POST` if not configured. |
+| `path` | Required URL path at which the handler will be registered and the requests will be sent. |
+| `expect` | Expected returned status code(s). By default, anything but `200` is considered an error. This value is only used for making requests and has no influence on the handler (which will return `200` by default). |
+| `isRequest` `isResponse` | Type checking functions run before and after serializing the objects in both client and server. By default any value will be considered correct. |
+| `strict` | Flag to enable strict JSON marshalling/un-marshalling. By default "raw" strings are detected and handled as non-JSON. In strict mode, they would cause a parsing error. This issue is relevant if a server is returning a plain message `str`. Since it is not valid JSON it cannot be parsed without extra steps. The correct format for a JSON string surrounds it with double quotes `"str"`. |
+
 ## Client
 
-`TODO`
+Clients are responsible for sending requests and receiving responses.
+
+Rickety is released with a few included clients which can be imported using the [`rickety/client/...`](./client) path pattern.
+
+| [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) | [`xhr`](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) | [`node`](https://nodejs.org/api/https.html) | [`request`](https://github.com/request/request) | [`axios`](https://github.com/axios/axios) |
+| -- | -- | -- | -- | -- |
+
+_The `fetch` client is used as `DefaultClient`._
+
+All clients can be extended or re-implemented for each application's requirements. For example, a client can enable caching, modify headers or append a path prefix or a domain to endpoint URLs. The only requirement for a client is that it satisfies the `Client` interface available in [`rickety/client`](./client/index.ts).
+
+The [`supertest`](./client/supertest) client also enables easy integration tests, as detailed in the [testing](#testing) section.
 
 ## Group
 
 `TODO`
+
+The group's request and response types can also be accessed using `typeof` on two special members. Accessing these by value with produce an error.
+
+```typescript
+type Request = typeof group.$req;
+type Response = typeof group.$res;
+```
 
 ## Testing
 
