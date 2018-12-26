@@ -137,6 +137,7 @@ export class Endpoint<RQ, RS> extends Callable<RQ, RS> implements Config {
         const method = this.method;
         const headers = {
             "Content-Type": "application/json",
+            "Content-Length": body.length + "",
         };
 
         let res: ClientResponse;
