@@ -1,84 +1,137 @@
 # 4.0.0
 
-Remove headers argument from Endpoint.call.
+Make Endpoints require a client in their configuration.
+
+Multiple clients are implemented for different use cases in [`client/...`](./client). A default client is also exported from the package (currently [`FetchClient`](./client/fetch.ts)).
+
+The only requirement for a client is that it satisfies the `Client` interface available in [`rickety/client`](./client/index.ts).
 
 ```typescript
-// TODO show how to use middleware instead
+const endpoint = new Endpoint({
+    client: myAPI,
+    // ...
+});
 ```
 
 ##
 
-Make Endpoints configurable with a Client (instead of globally).
-
+Remove headers arguments from `Endpoint.call`. Headers can still be modified using a custom client.
 
 ```typescript
-// TODO show how to use client
+class CustomClient extends DefaultClient implements Client {
+    public send(request: ClientRequest) {
+        request.headers["Custom-Header"] = "abc";
+        return super.send(request);
+    }
+}
+
+const myAPI = new CustomClient();
+
+const endpoint = new Endpoint({
+    client: myAPI,
+    // ...
+});
 ```
 
 ##
 
-Add construct to group endpoints into a single callable entity.
+Remove `base` option from endpoint configuration. The url can still be modified using a custom client.
 
 ```typescript
-// TODO show basic group usage
+class CustomClient extends DefaultClient implements Client {
+    public send(request: ClientRequest) {
+        request.url = "https://example.com/base/" + request.url
+        return super.send(request);
+    }
+}
+
+const myAPI = new CustomClient();
+
+const endpoint = new Endpoint({
+    client: myAPI,
+    // ...
+});
 ```
 
 ##
 
-Remove `base` option, should extend your client.
+Removed exports from entry module. Internal types are still exported, but from other files. For example, endpoint `Config` can be accessed from "rickety/source/endpoint" and `Client` from "rickety/client".
+
+The custom types for `Status` and `Method` were also removed in favor of `number` and `string` respectively.
+
+##
+
+Make JSON marshalling/un-marshalling more lenient for raw strings. This issue comes up if a server is returning a plain message `str`. Since it is not valid JSON it cannot be parsed without extra steps. The correct format for a JSON string surrounds it with double quotes `"str"`.
+
+This behavior can be disabled by enabling `strict` mode in an endpoint's config.
 
 ```typescript
-// TODO show before/after
-// TODO express router for handling client base
+const endpoint = new Endpoint({
+    // ...
+    strict: true,
+});
 ```
 
 ##
 
-Make `status` and `method` config options primitive types.
+Add `Group` construct to combine endpoints into single callable entity. Requests and responses remain strictly typed and have the same "shape" as the group's template.
 
 ```typescript
-// TODO show before/after
+const endpoint = new Endpoint<string, number>( ... );
+
+const group = new Group({
+    very: {
+        nested: {
+            example: endpoint,
+        },
+    },
+});
+
+const response = await group.call({
+    very: {
+        nested: {
+            example: "abc",
+        },
+    },
+})
+
+// response {
+//     very: {
+//         nested: {
+//             example: 123,
+//         }
+//     }
+// }
 ```
 
 ##
 
-Make request and response types available on endpoints.
+Add optional type checking options to endpoint config. These are used both when marshalling and un-marshalling data.
 
 ```typescript
-// TODO sample
+const endpoint = new Endpoint({
+    // ...
+    isRequest: (req) => {
+        if (!req) return false;
+        if (req.value === undefined) return false;
+        return true;
+    },
+    isResponse: (res) => {
+        // ...
+    },
+});
 ```
 
 ##
 
-Move + rename links to client (+ rename express to supertest).
+Make endpoint (and group) request and response types available as `$req` and `$res`.
 
 ```typescript
-// TODO show before/after
+const endpointRequest: typeof endpoint.$req;
+const groupResponse: typeof group.$res;
 ```
 
-##
-
-Removed noisy exports from default entry.
-
-```typescript
-// TODO sample of looking into ./client and ./source/endpoint
-```
-
-##
-
-Make endpoint (and group/callable) request and response types available as $req and $res
-
-```typescript
-// TODO example with endpoint and group
-```
-
-##
-
-Add config option to make JSON marshalling/un-marshalling `strict`.
-
-```typescript
-// TODO example of raw server response treated as string
-```
+_Using these members by value with produce an error._
 
 # 3.0.3
 

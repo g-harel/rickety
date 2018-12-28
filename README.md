@@ -1,8 +1,7 @@
 <!--
 
 TODO
-- update readme/changelog for v4
-- investigate bundling options (avoid async polyfill in each file)
+- add tests for all clients
 
  -->
 
@@ -17,6 +16,7 @@ TODO
 * [Strongly typed endpoints](#usage)
 * [Groupable queries](#group)
 * [Convenient testing](#testing)
+* [Optional type checks](#config)
 * [Extensible clients](#client)
 * [No runtime dependencies](/package.json)
 
@@ -133,9 +133,9 @@ The [`supertest`](./client/supertest.ts) client also enables easy integration te
 Groups allow multiple endpoints to be treated as a single construct while preserving type information.
 
 ```typescript
-const userByID = new Endpoint<string, User>(...);
-const promotedByUserID = new Endpoint<string, Product[]>(...);
-const allProducts = new Endpoint<Query, Product[]>(...);
+const userByID = new Endpoint<string, User>( ... );
+const promotedByUserID = new Endpoint<string, Product[]>( ... );
+const allProducts = new Endpoint<Query, Product[]>( ... );
 
 const listingPage = new Group({
     user: userByID,

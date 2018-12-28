@@ -3,10 +3,10 @@ import {Request, Response} from "express";
 import {Client, ClientResponse} from "../client";
 import {Callable} from "./callable";
 
-// Config object influences the behavior of both the
-// request making and handling logic. It is designed to
-// make it possible to represent an arbitrary endpoint
-// that is not necessarily managed by this package.
+// Config object influences the behavior of both the request
+// sending and handling logic. It attempts to be flexible
+// enough to accommodate arbitrary endpoints (not managed
+// by this package).
 export interface Config {
     // Client is used to send the requests and can be shared
     // by multiple endpoints.
