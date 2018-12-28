@@ -200,13 +200,14 @@ test("homepage fetches correct user data", () => {
 The express app instance can be "linked" to test handler behavior.
 
 ```tsx
-import {link} from "rickety/link";
+import {SupertestClient} from "rickety/client/supertest";
 
-import {createUserByEmail} from "../endpoints";
 import {app} from "../backend/app";
 import {database} from "../backend/database";
+import {client} from "../client";
+import {createUserByEmail} from "../endpoints";
 
-link.express(app);
+SupertestClient.override(client, app);
 
 test("new user is created in the database", async () => {
     const spy = jest.spyOn(database, "createUser");
@@ -218,17 +219,18 @@ test("new user is created in the database", async () => {
 });
 ```
 
-This linking pattern also enables integration tests which involve both client and server code.
+This pattern also enables integration tests which involve both client and server code.
 
 ```tsx
-import {link} from "rickety/link";
+import {SupertestClient} from "rickety/client/supertest";
 import {mount} from "enzyme";
 
 import {app} from "../backend/app";
 import {database} from "../backend/database";
+import {client} from "../client";
 import {SignUp} from "../frontend/components";
 
-link.express(app);
+SupertestClient.override(client, app);
 
 test("should refuse duplicate email addresses", async () => {
     const spy = jest.spyOn(database, "createUser");
