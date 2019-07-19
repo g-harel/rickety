@@ -1,3 +1,7 @@
+# 4.0.1
+
+Remove typescript source from published bundle.
+
 # 4.0.0
 
 Make Endpoints require a client in their configuration.
