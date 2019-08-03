@@ -12,7 +12,7 @@
     "postpublish": "npm run clean",
     "build": "npm run clean && tsc",
     "clean": "trash '**/*.js' '**/*.js.map' '**/*.d.ts' '!**/node_modules/**/*'",
-    "format": "prettier --list-different --write --ignore-path .gitignore '**/*.{js,ts}'"
+    "fmt": "prettier --list-different --write --ignore-path .gitignore '**/*.{js,ts}'"
   },
   "peerDependencies": {
     "@types/express": "4.*.*"
