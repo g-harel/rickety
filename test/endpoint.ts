@@ -203,7 +203,7 @@ describe("handler", () => {
 
     it("should call handler with the parsed request payload", async () => {
         const path = "/path";
-        const test = jest.fn(() => {});
+        const test = jest.fn();
         const payload = {test: true, arr: [0, ""]};
         const endpoint = new Endpoint({client, path});
         app.use(endpoint.handler(test));

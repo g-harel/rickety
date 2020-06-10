@@ -4,7 +4,7 @@ import {Endpoint, Group} from "..";
 const genMockedEndpoint = () => {
     return new Endpoint({
         client: {
-            send: jest.fn(() => ({
+            send: jest.fn(async () => ({
                 body: "{}",
                 status: 200,
             })),
