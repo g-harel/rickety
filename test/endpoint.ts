@@ -301,4 +301,23 @@ describe("handler", () => {
         expect(res.text).toMatch(/response type check/i);
         expect(test).toHaveBeenCalledWith(response);
     });
+
+    it("should throw an error if the response is unserializable", async () => {
+        const path = "/path";
+        const response: any = {};
+        response.loop = response;
+        const endpoint = new Endpoint({
+            client,
+            path,
+        });
+
+        app.use(endpoint.handler(() => response));
+
+        const res = await supertest(app)
+            .post(path)
+            .send("{}");
+
+        expect(res.status).toBe(500);
+        expect(res.text).toMatch(/stringify response data/i);
+    });
 });

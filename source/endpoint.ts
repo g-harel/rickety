@@ -230,7 +230,7 @@ export class Endpoint<RQ, RS> extends Callable<RQ, RS> implements Config {
             try {
                 rawResponseData = stringify(responseData, this.strict);
             } catch (e) {
-                return err(this, "Could not stringify response data", e);
+                return next(err(this, "Could not stringify response data", e));
             }
 
             res.status(200);

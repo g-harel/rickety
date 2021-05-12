@@ -1,6 +1,6 @@
 {
   "name": "rickety",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "minimal typescript rpc framework",
   "author": "g-harel",
   "license": "MIT",
