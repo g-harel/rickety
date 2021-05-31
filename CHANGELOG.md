@@ -1,3 +1,11 @@
+# 4.1.0
+
+Use parsed body from `req.body` when it exists.
+
+# 4.0.2
+
+Correctly forward errors during response serialization.
+
 # 4.0.1
 
 Remove typescript source from published bundle.
