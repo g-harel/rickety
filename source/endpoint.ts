@@ -189,20 +189,26 @@ export class Endpoint<RQ, RS> extends Callable<RQ, RS> implements Config {
                 return next(err(this, "Response has already been sent."));
             }
 
-            // Request body is streamed into a string to be parsed.
-            const rawRequestData = await new Promise<string>((resolve) => {
-                let data = "";
-                req.setEncoding("utf8");
-                req.on("data", (chunk) => (data += chunk));
-                req.on("end", () => resolve(data));
-            });
-
+            // Use parsed version if already present.
+            // This allows for "body-parser" middleware and GCP Cloud Functions.
             let requestData: RQ;
-            try {
-                requestData = parse(rawRequestData, this.strict);
-            } catch (e) {
-                const msg = "Could not parse request data";
-                return next(err(this, msg, e, rawRequestData));
+            if (req.body !== undefined) {
+                requestData = req.body;
+            } else {
+                // Request body is streamed into a string to be parsed.
+                const rawRequestData = await new Promise<string>((resolve) => {
+                    let data = "";
+                    req.setEncoding("utf8");
+                    req.on("data", (chunk) => (data += chunk));
+                    req.on("end", () => resolve(data));
+                });
+
+                try {
+                    requestData = parse(rawRequestData, this.strict);
+                } catch (e) {
+                    const msg = "Could not parse request data";
+                    return next(err(this, msg, e, rawRequestData));
+                }
             }
 
             if (!this.isRequest(requestData)) {

@@ -227,15 +227,19 @@ describe("handler", () => {
         expect(response.body).toEqual(payload);
     });
 
-    it("should respond with stringified response from handler", async () => {
+    it("should use req.body if provided", async () => {
         const path = "/path";
         const payload = {test: true, arr: [0, ""]};
         const endpoint = new Endpoint({client, path});
-        app.use(endpoint.handler(() => payload));
+        app.use((req, _, next) => {
+            req.body = payload;
+            next();
+        });
+        app.use(endpoint.handler((req) => req));
 
         const response = await supertest(app)
             .post(path)
-            .send("{}");
+            .send("");
         expect(response.body).toEqual(payload);
     });
 
